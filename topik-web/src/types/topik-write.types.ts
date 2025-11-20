@@ -1,53 +1,22 @@
-// =================================================================================
-// Request Related Types
+import { CorrectionResponse } from "./topik-correct.types";
+import { QuestionType } from "./topik.types";
 
-import { QuestionId } from "./topik.types";
-
-// =================================================================================
 export interface SentenceCompletionAnswer<T = string> {
   answer1: T;
   answer2: T;
 }
 
-interface BaseRequest {
-  questionPrompt: string;
-}
-
-// ====== 51/52 (빈칸형) ======
-export interface SentenceCompletionRequest extends BaseRequest {
-  questionNumber: QuestionId.Q51 | QuestionId.Q52;
-  answer: SentenceCompletionAnswer;
-}
-
-// ====== 53 (설명글 작성) ======
-export interface InfoDescriptionRequest extends BaseRequest {
-  questionNumber: QuestionId.Q53;
-  answer: string;
-  imageUrl?: string; // 53번일땐 이미지 주소가 필요
-}
-
-// ====== 54 (에세이 작성) ======
-export interface OpinionEssayRequest extends BaseRequest {
-  questionNumber: QuestionId.Q54;
-  answer: string;
-}
-
-export type TopikWritingEvaluatorRequest = SentenceCompletionRequest | InfoDescriptionRequest | OpinionEssayRequest;
-
-// =================================================================================
-// Evaluation Response Related Types
-// =================================================================================
 export type EvaluationResponseById = {
-  [QuestionId.Q51]: SentenceCompletionEvaluation;
-  [QuestionId.Q52]: SentenceCompletionEvaluation;
-  [QuestionId.Q53]: InfoDescriptionEvaluation;
-  [QuestionId.Q54]: OpinionEssayEvaluation;
+  [QuestionType.Q51]: SentenceCompletionResponse;
+  [QuestionType.Q52]: SentenceCompletionResponse;
+  [QuestionType.Q53]: WritingResponse;
+  [QuestionType.Q54]: WritingResponse;
 };
 
-export type EvaluationResponseFor<Q extends QuestionId> = EvaluationResponseById[Q];
-export type EvaluationResponseUnion = EvaluationResponseById[QuestionId];
+export type EvaluationResponseFor<Q extends QuestionType> = EvaluationResponseById[Q];
+export type EvaluationResponseUnion = EvaluationResponseById[QuestionType];
 
-interface EvaluationBase {
+interface EvaluationBaseResponse {
   total_score: number;
   strengths: string[];
   weaknesses: string[];
@@ -56,31 +25,40 @@ interface EvaluationBase {
 }
 
 // 51/52
-export interface SentenceCompletionEvaluation extends EvaluationBase {
+export interface SentenceCompletionResponse extends EvaluationBaseResponse {
   scores: SentenceCompletionAnswer<number>;
   model_answer: SentenceCompletionAnswer;
 }
 
-// 53
-export interface InfoDescriptionEvaluation extends EvaluationBase {
-  scores: {
-    task_performance: number;
-    structure: number;
-    language_use: number;
-  };
+// 53/54
+interface WritingResponseScores {
+  task_performance: number;
+  structure: number;
+  language_use: number;
+}
+
+export interface WritingResponse extends EvaluationBaseResponse {
+  scores: WritingResponseScores;
   char_count: number;
   char_count_evaluation: string;
   model_answer: string;
 }
 
-// 54
-export interface OpinionEssayEvaluation extends EvaluationBase {
-  scores: {
-    task_performance: number;
-    structure: number;
-    language_use: number;
-  };
-  char_count: number;
-  char_count_evaluation: string;
-  model_answer: string;
+export interface GetQuestionContentResponse {
+  id: string;
+  title: string;
+  question_text: string;
+  image_url?: string;
+}
+
+export interface SubmissionResult {
+  evaluation: EvaluationResponseUnion;
+  correction: CorrectionResponse;
+}
+export interface EvaluationRecord {
+  id: string;
+  attempt_no: number;
+  created_at: string;
+  user_answer: string | { answer1: string; answer2: string } | { essay_answer: string };
+  submission_results: SubmissionResult;
 }

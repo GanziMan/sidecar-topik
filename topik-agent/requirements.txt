@@ -6,3 +6,8 @@ google-adk==1.16.0
 
 # Environment
 python-dotenv
+uvicorn
+fastapi
+supabase
+requests
+markdownify

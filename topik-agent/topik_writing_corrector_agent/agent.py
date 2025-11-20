@@ -9,5 +9,3 @@ root_agent = TopikWritingCorrector(
     info_description_agent=info_description_corrector_agent,
     opinion_essay_agent=opinion_essay_corrector_agent,
 )
-
-

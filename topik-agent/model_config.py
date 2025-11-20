@@ -1,9 +1,16 @@
 from google.genai import types
+from google.adk.planners import BuiltInPlanner
 
 GENERATE_CONTENT_CONFIG = types.GenerateContentConfig(
     temperature=0,
     top_p=0.9,
-    response_mime_type="application/json",
+)
+
+
+DEFAULT_PLANNER = BuiltInPlanner(
+    thinking_config=types.ThinkingConfig(
+        thinking_budget=0
+    )
 )
 
 

@@ -1,13 +1,11 @@
-export interface CorrectionChangeItem {
+export interface CorrectionChangeSentence {
   original: string;
   revised: string;
-  position: string;
+  position: {
+    paragraph: number;
+    sentence: number;
+  };
   reason: string;
-}
-
-export interface CorrectionChangeSet {
-  vocabulary_spelling_corrections: CorrectionChangeItem[];
-  sentence_corrections: CorrectionChangeItem[];
 }
 
 export interface CorrectionImprovement {
@@ -18,7 +16,7 @@ export interface CorrectionImprovement {
 export interface CorrectionResponse {
   original_answer: string;
   corrected_answer: string;
-  edit_items: CorrectionChangeSet;
+  sentence_corrections: CorrectionChangeSentence[];
   improvement_effects: CorrectionImprovement;
   overall_feedback: string;
 }

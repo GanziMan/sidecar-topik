@@ -1,27 +1,26 @@
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
-import { QuestionId } from "@/types/topik.types";
-import { CorrectionResponse } from "@/types/topik-correct.types";
+import { QuestionType } from "@/types/topik.types";
+import { CorrectionChangeSentence, CorrectionResponse } from "@/types/topik-correct.types";
 
 import React from "react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/tooltip";
 
 interface AICorrectionReviewProps {
-  questionId: QuestionId;
+  questionType: QuestionType;
   correctionResult?: CorrectionResponse;
   isLoading: boolean;
-  error: string | null;
+  error?: string;
   initialScore: number;
 }
 // AI 첨삭
 export default function AICorrectionReview({
-  questionId,
+  questionType,
   correctionResult,
   isLoading,
   error,
   initialScore,
 }: AICorrectionReviewProps) {
-  const isEssayQuestion = questionId === QuestionId.Q53 || questionId === QuestionId.Q54;
+  const isEssayQuestion = questionType === QuestionType.Q53 || questionType === QuestionType.Q54;
 
   if (!isEssayQuestion) {
     return (
@@ -44,9 +43,8 @@ export default function AICorrectionReview({
     return null;
   }
 
-  const { improvement_effects, edit_items } = correctionResult;
+  const { improvement_effects, sentence_corrections } = correctionResult;
   const { expected_score_gain, key_improvements } = improvement_effects;
-  const { vocabulary_spelling_corrections, sentence_corrections } = edit_items;
 
   return (
     <>
@@ -56,10 +54,13 @@ export default function AICorrectionReview({
           content={<ScoreChangeIndicator initialScore={initialScore} scoreGain={Number(expected_score_gain) || 0} />}
         />
         <div className="flex gap-5">
-          <CorrectionCard title="어휘/맞춤법 교정" content={`${vocabulary_spelling_corrections?.length || 0}`} />
           <CorrectionCard title="문장 교정" content={`${sentence_corrections?.length || 0}`} />
         </div>
 
+        <Card className="p-5 bg-[#F7F7F7] flex flex-col gap-[14px] w-full">
+          <p className="font-semibold">AI 첨삭</p>
+          <CorrectedEssayView correctionResult={correctionResult} />
+        </Card>
         <Card className="p-5 bg-[#F7F7F7] flex flex-col gap-[14px] w-full">
           <p className="font-semibold">주요 개선 사항</p>
           <ul className="list-none list-inside ps-2">
@@ -71,11 +72,6 @@ export default function AICorrectionReview({
           </ul>
         </Card>
       </div>
-
-      <Card className="p-5 bg-[#F7F7F7] flex flex-col gap-[14px] w-full">
-        <p className="font-semibold">AI 첨삭</p>
-        <CorrectedEssayView correctionResult={correctionResult} />
-      </Card>
     </>
   );
 }
@@ -141,81 +137,66 @@ interface CorrectedEssayViewProps {
 }
 
 function CorrectedEssayView({ correctionResult }: CorrectedEssayViewProps) {
-  const { corrected_answer, edit_items } = correctionResult;
+  const { sentence_corrections, original_answer } = correctionResult;
 
-  if (!corrected_answer || !edit_items) {
-    return <p>{correctionResult.overall_feedback || "첨삭 내용이 없습니다."}</p>;
+  if (!original_answer) {
+    return null;
   }
 
-  const { vocabulary_spelling_corrections } = edit_items;
-  const allCorrections = [...(vocabulary_spelling_corrections || [])];
+  const paragraphs = original_answer
+    .split("\n")
+    .filter((p) => p.trim() !== "")
+    .map((p) => p.match(/[^.!?]+[.!?\s]*/g) || [p]);
 
-  const matches: { start: number; end: number; reason: string; text: string }[] = [];
+  if (!sentence_corrections || sentence_corrections.length === 0) {
+    return <div className="whitespace-pre-line"> 첨삭 결과가 없습니다. </div>;
+  }
 
-  allCorrections.forEach(({ revised, reason }) => {
-    if (!revised) return;
+  const invalidCorrections: CorrectionChangeSentence[] = [];
+  sentence_corrections.forEach((correction, index) => {
+    const { position, original, revised, reason } = correction;
+    const pIndex = position.paragraph - 1;
+    const sIndex = position.sentence - 1;
 
-    let lastIndex = -1;
-    while ((lastIndex = corrected_answer.indexOf(revised, lastIndex + 1)) !== -1) {
-      matches.push({
-        start: lastIndex,
-        end: lastIndex + revised.length,
-        reason: reason,
-        text: revised,
-      });
+    if (paragraphs[pIndex] && paragraphs[pIndex][sIndex]) {
+      const originalSentence = paragraphs[pIndex][sIndex];
+      paragraphs[pIndex][sIndex] = originalSentence.replace(
+        original.trim(),
+        `<span class='text-blue-500 font-bold' title="${reason}"><span class='text-xs text-red-300'>${
+          index + 1
+        }</span>${revised}</span>`
+      );
+    } else {
+      invalidCorrections.push(correction);
     }
   });
-
-  matches.sort((a, b) => {
-    if (a.start !== b.start) {
-      return a.start - b.start;
-    }
-    return b.end - a.end;
-  });
-
-  const finalMatches: typeof matches = [];
-  let lastEnd = -1;
-  for (const match of matches) {
-    if (match.start >= lastEnd) {
-      finalMatches.push(match);
-      lastEnd = match.end;
-    }
-  }
-
-  if (finalMatches.length === 0) {
-    return <p className="whitespace-pre-wrap leading-relaxed">{corrected_answer}</p>;
-  }
-
-  const chunks: (string | React.JSX.Element)[] = [];
-  let currentIndex = 0;
-
-  finalMatches.forEach((match, i) => {
-    chunks.push(corrected_answer.substring(currentIndex, match.start));
-
-    chunks.push(
-      <TooltipProvider key={`${match.start}-${i}`}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className="bg-blue-100 underline decoration-blue-500 cursor-pointer">{match.text}</span>
-          </TooltipTrigger>
-          <TooltipContent className="bg-gray-800 text-white border-0">
-            <p>{match.reason}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    );
-    currentIndex = match.end;
-  });
-
-  if (currentIndex < corrected_answer.length) {
-    chunks.push(corrected_answer.substring(currentIndex));
-  }
 
   return (
-    <div className="whitespace-pre-wrap leading-relaxed">
-      {chunks.map((chunk, index) => (
-        <React.Fragment key={index}>{chunk}</React.Fragment>
+    <div>
+      {paragraphs.map((paragraph, pIndex) => (
+        <p key={pIndex} className="mb-4 last:mb-0">
+          {paragraph.map((sentence, sIndex) => (
+            <span key={sIndex} dangerouslySetInnerHTML={{ __html: sentence }} />
+          ))}
+        </p>
       ))}
+      {invalidCorrections.length > 0 && (
+        <div className="mt-4 p-4 border border-red-200 bg-red-50 rounded-md">
+          <h4 className="font-bold text-red-700">오류: 일부 첨삭을 적용할 수 없습니다.</h4>
+          <p className="text-sm text-red-600">
+            AI가 생성한 문장 위치 정보가 잘못되어 다음 첨삭들이 반영되지 않았습니다.
+          </p>
+          <ul className="list-disc list-inside mt-2 text-sm text-red-600">
+            {invalidCorrections.map((c, i) => (
+              <li key={i}>
+                문단 {c.position.paragraph}, 문장 {c.position.sentence}: &quot;{c.original}&quot; &rarr; &quot;
+                {c.revised}
+                &quot;
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

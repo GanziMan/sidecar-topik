@@ -1,20 +1,26 @@
-import Image from "next/image";
+"use client";
+
 import Link from "next/link";
 import { Button } from "./ui/button";
-import { QUESTION_IDS } from "@/config/topik-write.config";
+import { QUESTION_TYPES } from "@/config/topik-write.config";
+import { cn } from "@/lib/utils";
+import { useParams } from "next/navigation";
 
 export default function Header() {
-  return (
-    <header className="w-full py-5 bg-[#EBEBEB] flex justify-between items-center px-5">
-      <div className="h-10 flex items-center">
-        <Image src="/icons/icon-time-line.svg" alt="time-line" width={24} height={24} />
-        <span className="px-1.25 ml-1.75 font-bold leading-7.5 text-[#102E81]">00:49:47</span>
-      </div>
+  const { year, round, type } = useParams<{ year: string; round: string; type: string }>();
+  const currentQuestionType = type;
 
-      <div className="flex gap-2 float-right">
-        {QUESTION_IDS.map((id) => (
-          <Link href={`/question/${id}`} key={id}>
-            <Button className="bg-[#737373]">{id}번 문제</Button>
+  return (
+    <header className="flex justify-between items-center w-full h-[60px] border-b-[0.5px] border-[#DDDDDD] px-5">
+      <div className="flex gap-2.5">
+        {QUESTION_TYPES.map((type) => (
+          <Link href={`/question/${year}/${round}/${type}`} key={type}>
+            <Button
+              variant={type === currentQuestionType ? "default" : "outline"}
+              className={cn(type === currentQuestionType && "font-semibold", "text-sm w-[90px]")}
+            >
+              {type}번 문제
+            </Button>
           </Link>
         ))}
       </div>

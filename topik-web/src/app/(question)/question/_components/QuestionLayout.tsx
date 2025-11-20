@@ -1,23 +1,28 @@
 "use client";
 
-import { EvaluationResponseUnion, SentenceCompletionAnswer } from "@/types/topik-write.types";
+import {
+  EvaluationResponseUnion,
+  GetQuestionContentResponse,
+  SentenceCompletionAnswer,
+} from "@/types/topik-write.types";
 import QuestionForm from "./QuestionForm";
 import SolutionReview from "./SolutionReview";
 import { useState } from "react";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import Footer from "@/components/Footer";
-import { renderToStaticMarkup } from "react-dom/server";
-import { QuestionContents } from "../mock";
 import { fetchEvaluation } from "../actions";
-import { QuestionId, ErrorResponse } from "@/types/topik.types";
+import { QuestionType, ErrorResponse } from "@/types/topik.types";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
 
 interface QuestionLayoutProps {
-  id: QuestionId;
+  year: number;
+  round: number;
+  questionType: QuestionType;
+  questionContent: GetQuestionContentResponse;
 }
 
-export default function QuestionLayout({ id }: QuestionLayoutProps) {
+export default function QuestionLayout({ year, round, questionType, questionContent }: QuestionLayoutProps) {
   const [evaluationResult, setEvaluationResult] = useState<EvaluationResponseUnion | ErrorResponse | null>(null);
   const [sentenceCompletionAnswer, setSentenceCompletionAnswer] = useState<SentenceCompletionAnswer>({
     answer1: "",
@@ -30,39 +35,23 @@ export default function QuestionLayout({ id }: QuestionLayoutProps) {
   const handleEvaluation = async () => {
     setIsSubmitted(true);
     if (
-      (id === QuestionId.Q51 || id === QuestionId.Q52) &&
+      (questionType === QuestionType.Q51 || questionType === QuestionType.Q52) &&
       (!sentenceCompletionAnswer.answer1 || !sentenceCompletionAnswer.answer2)
     ) {
       return;
     }
     setIsLoading(true);
     try {
-      const context = renderToStaticMarkup(QuestionContents[id])
-        ?.replace(/<[^>]*>/g, " ")
-        ?.replace(/\s+/g, " ")
-        .trim();
-
-      switch (id) {
-        case QuestionId.Q51:
-        case QuestionId.Q52: {
-          const res = await fetchEvaluation(id, sentenceCompletionAnswer, "", context, undefined);
+      switch (questionType) {
+        case QuestionType.Q51:
+        case QuestionType.Q52: {
+          const res = await fetchEvaluation(year, round, questionContent.id, questionType, sentenceCompletionAnswer);
           setEvaluationResult(res);
           break;
         }
-        case QuestionId.Q53: {
-          const res = await fetchEvaluation(
-            QuestionId.Q53,
-            sentenceCompletionAnswer,
-            essayAnswer,
-            context,
-            "/images/mock/img-53problem.jpeg"
-          );
-          setEvaluationResult(res);
-          break;
-        }
-        case QuestionId.Q54: {
-          const res = await fetchEvaluation(QuestionId.Q54, sentenceCompletionAnswer, essayAnswer, context, undefined);
-
+        case QuestionType.Q53:
+        case QuestionType.Q54: {
+          const res = await fetchEvaluation(year, round, questionContent.id, questionType, essayAnswer);
           setEvaluationResult(res);
           break;
         }
@@ -102,7 +91,8 @@ export default function QuestionLayout({ id }: QuestionLayoutProps) {
       <div className="flex gap-7.5 justify-center">
         <LoadingOverlay isLoading={isLoading} label="채점 중...">
           <QuestionForm
-            id={id}
+            questionType={questionType}
+            questionContent={questionContent}
             sentenceCompletionAnswer={sentenceCompletionAnswer}
             essayAnswer={essayAnswer}
             isLoading={isLoading}
@@ -117,10 +107,13 @@ export default function QuestionLayout({ id }: QuestionLayoutProps) {
             <div className="text-red-500">{evaluationResult.error as string}</div>
           ) : (
             <SolutionReview
-              questionId={id}
+              questionYear={year}
+              questionRound={round}
+              questionType={questionType}
               evaluationResult={evaluationResult}
               essayAnswer={essayAnswer}
               charCount={Array.from(essayAnswer).length}
+              questionId={questionContent.id as string}
             />
           ))}
       </div>

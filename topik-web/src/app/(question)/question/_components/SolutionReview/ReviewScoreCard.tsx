@@ -5,7 +5,7 @@ interface ReviewScoreCardProps {
   className?: string;
   title: string;
   score: number;
-  totalScore: number;
+  totalScore: number | string;
   evaluation?: string;
 }
 

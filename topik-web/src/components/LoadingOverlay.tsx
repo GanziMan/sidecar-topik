@@ -17,7 +17,7 @@ export function LoadingOverlay({
   blur = true,
 }: LoadingOverlayProps) {
   return (
-    <div className={cn("relative", className)} aria-busy={isLoading} aria-live="polite">
+    <div className={cn("relative z-0", className)} aria-busy={isLoading} aria-live="polite">
       <div className={cn(isLoading ? "opacity-50" : undefined)}>{children}</div>
       {isLoading && (
         <div className={cn("absolute inset-0 z-10 flex items-center justify-center", blur && "backdrop-blur-sm")}>

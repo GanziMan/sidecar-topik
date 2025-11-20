@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function NotFound() {
-  redirect("/question/51");
+  redirect("/question/2025/1/51");
 }

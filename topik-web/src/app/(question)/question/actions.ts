@@ -1,23 +1,17 @@
-import {
-  EvaluationResponseFor,
-  EvaluationResponseUnion,
-  SentenceCompletionAnswer,
-  TopikWritingEvaluatorRequest,
-} from "@/types/topik-write.types";
+import { EvaluationResponseFor, EvaluationResponseUnion, SentenceCompletionAnswer } from "@/types/topik-write.types";
 import { ApiClient } from "@/lib/ky";
-import { QuestionPrompt } from "./mock";
-import { QuestionId } from "@/types/topik.types";
+import { QuestionType } from "@/types/topik.types";
 import { CorrectionResponse } from "@/types/topik-correct.types";
-import { TopikWritingCorrectorRequest } from "@/app/schemas/topik-write.schema";
+import { TopikWritingCorrectorRequest, TopikWritingEvaluatorRequest } from "@/app/schemas/topik-write.schema";
 
-export async function fetchEvaluation<Q extends QuestionId>(
-  id: Q,
-  sentenceCompletionAnswer: SentenceCompletionAnswer,
-  essayAnswer: string,
-  context: string,
-  imageUrl?: string
+export async function fetchEvaluation<Q extends QuestionType>(
+  year: number,
+  round: number,
+  questionId: string,
+  questionType: Q,
+  answer: SentenceCompletionAnswer | string
 ): Promise<EvaluationResponseFor<Q>> {
-  const request = evaluationRequest(id, sentenceCompletionAnswer, essayAnswer, context, imageUrl);
+  const request = evaluationRequest(year, round, questionId, questionType, answer);
 
   const response = await ApiClient.post<TopikWritingEvaluatorRequest, EvaluationResponseFor<Q>>(
     "/api/topik-write/evaluations",
@@ -27,29 +21,22 @@ export async function fetchEvaluation<Q extends QuestionId>(
 }
 
 export async function fetchCorrection(
-  id: QuestionId,
+  year: number,
+  round: number,
+  questionType: QuestionType,
   essayAnswer: string,
-  context: string,
-  evaluationResult: EvaluationResponseUnion,
-  imageUrl?: string
+  evaluationResult: EvaluationResponseUnion
 ): Promise<CorrectionResponse> {
-  if (id !== QuestionId.Q53 && id !== QuestionId.Q54) {
+  if (questionType !== QuestionType.Q53 && questionType !== QuestionType.Q54) {
     throw new Error("Correction is only available for questions 53 and 54.");
   }
 
-  // evaluationResult has more fields than EvaluationBase, but it's compatible.
   const payload = {
-    questionNumber: id,
-    questionPrompt: QuestionPrompt(id, context),
+    year,
+    round,
+    questionNumber: questionType,
     answer: essayAnswer,
-    evaluationResult: {
-      total_score: evaluationResult.total_score,
-      strengths: evaluationResult.strengths,
-      weaknesses: evaluationResult.weaknesses,
-      improvement_suggestions: evaluationResult.improvement_suggestions,
-      overall_feedback: evaluationResult.overall_feedback,
-    },
-    ...(imageUrl && { imageUrl }),
+    evaluationResult,
   };
 
   const response = await ApiClient.post<TopikWritingCorrectorRequest, CorrectionResponse>(
@@ -60,28 +47,11 @@ export async function fetchCorrection(
 }
 
 function evaluationRequest(
-  id: QuestionId,
-  sentenceCompletionAnswer: SentenceCompletionAnswer,
-  essayAnswer: string,
-  context: string,
-  imageUrl?: string
+  year: number,
+  round: number,
+  questionId: string,
+  questionType: QuestionType,
+  answer: SentenceCompletionAnswer | string
 ): TopikWritingEvaluatorRequest {
-  const isSentenceCompletionQuestion = id === QuestionId.Q51 || id === QuestionId.Q52;
-
-  if (isSentenceCompletionQuestion) {
-    return {
-      questionNumber: id,
-      questionPrompt: QuestionPrompt(id, context),
-      answer: {
-        answer1: sentenceCompletionAnswer["answer1"],
-        answer2: sentenceCompletionAnswer["answer2"],
-      },
-    };
-  }
-  return {
-    questionNumber: id,
-    questionPrompt: QuestionPrompt(id, context),
-    answer: essayAnswer,
-    ...(imageUrl ? { imageUrl } : {}),
-  };
+  return { year, round, question_id: questionId, questionNumber: questionType, answer };
 }

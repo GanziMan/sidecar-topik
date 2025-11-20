@@ -1,5 +1,3 @@
-
-import html
 from typing_extensions import override
 from google.genai import types
 from google.adk.agents import BaseAgent, InvocationContext, LlmAgent
@@ -39,14 +37,11 @@ class TopikWritingEvaluator(BaseAgent):
     async def _run_async_impl(self, ctx: InvocationContext):
 
         payload_string = ""
-        image_parts: list[types.Part] = []
+
         if ctx.user_content and ctx.user_content.parts:
             for part in ctx.user_content.parts:
                 if getattr(part, "text", None):
-                    if not payload_string:
-                        payload_string = part.text or ""
-                elif getattr(part, "inline_data", None):
-                    image_parts.append(part)
+                    payload_string = part.text or ""
 
         if payload_string:
             try:
@@ -54,21 +49,28 @@ class TopikWritingEvaluator(BaseAgent):
             except json.JSONDecodeError:
                 raise ValueError("Failed to decode user input JSON.")
 
+        exam_year = payload_json.get("exam_year")
+        exam_round = payload_json.get("exam_round")
         question_number = payload_json.get("question_number")
-        question_prompt = payload_json.get("question_prompt")
+
         answer = payload_json.get("answer")
-        answer_length = len(answer) if answer else 0
+        answer_length = len(answer)
 
         answer_length_prompt = f" \n[글자수]\n{answer_length}" if answer_length is not None else ""
-        standard_prompt = f"[문제]\n{html.unescape(question_prompt)}\n\n[학생 답안]\n{answer}\n\n{answer_length_prompt}"
+        standard_prompt = (
+            f"아래 주어진 시험 정보(연도, 회차, 문제 번호)를 사용하여 문제의 원본 내용(question_text or image)을 먼저 조회하시오.\n"
+            f"그 다음, 학생의 답안을 채점하시오.\n\n"
+            f"--- 시험 정보 ---\n"
+            f"exam_year: {exam_year}\n"
+            f"exam_round: {exam_round}\n"
+            f"question_number: {question_number}\n\n"
+            f"--- 학생 답안 ---\n"
+            f"[학생 답안]\n{answer}\n\n {answer_length_prompt}"
+        )
 
-        if question_number == 53 and image_parts:
-            ctx.user_content = types.Content(
-                parts=[types.Part(text=standard_prompt), *image_parts]
-            )
-        else:
-            ctx.user_content = types.Content(
-                parts=[types.Part(text=standard_prompt)])
+        ctx.user_content = types.Content(
+            parts=[types.Part(text=standard_prompt)]
+        )
 
         routing_map = {
             51: self.sentence_completion_agent,

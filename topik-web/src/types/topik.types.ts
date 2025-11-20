@@ -3,14 +3,13 @@ export enum LlmMessageRole {
   MODEL = "model",
 }
 
-export enum QuestionId {
+export enum QuestionType {
   Q51 = "51",
   Q52 = "52",
   Q53 = "53",
   Q54 = "54",
 }
 
-// Agent Communication Related Types
 export interface TopikWritingEventPart {
   text: string;
 }
@@ -28,14 +27,15 @@ export interface TopikWritingEvent {
   finishReason: "STOP" | string;
 }
 
-export type AgentUserMessagePart = { text: string } | { inline_data: { mime_type: string; data: string } };
+export type AgentUserMessagePart = { text: string };
 
 export type TopikWritingAgentRequest = {
   app_name: string;
   user_id: string;
   session_id: string;
+  stream?: boolean;
   new_message: {
-    parts: Array<AgentUserMessagePart>;
+    parts: AgentUserMessagePart[];
     role: LlmMessageRole.USER;
   };
 };
@@ -45,5 +45,6 @@ export type TopikWritingAgentResponse = TopikWritingEvent[];
 // Error Related Types
 export type ErrorResponse = {
   error: string;
+  code?: string;
   details?: string;
 };

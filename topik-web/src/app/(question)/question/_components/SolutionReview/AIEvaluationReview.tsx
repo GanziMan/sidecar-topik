@@ -1,55 +1,31 @@
-import {
-  EvaluationResponseUnion,
-  OpinionEssayEvaluation,
-  SentenceCompletionEvaluation,
-} from "@/types/topik-write.types";
-import { QuestionId } from "@/types/topik.types";
+import { EvaluationResponseUnion, SentenceCompletionResponse, WritingResponse } from "@/types/topik-write.types";
+import { QuestionType } from "@/types/topik.types";
 import FeedbackCard from "./FeedbackCard";
 import ReviewScoreCard from "./ReviewScoreCard";
-import { TOTAL_SCORE_INFO } from "@/config/topik-write.config";
-
-const getCharCountEvaluation = (questionId: QuestionId, charCount: number) => {
-  if (questionId === QuestionId.Q53) {
-    if (charCount < 200) return "분량 미달";
-    if (charCount > 300) return "분량 초과";
-    return "적정 범위";
-  }
-  if (questionId === QuestionId.Q54) {
-    if (charCount < 600) return "분량 미달";
-    if (charCount > 700) return "분량 초과";
-    return "적정 범위";
-  }
-  return "";
-};
+import { QUESTION_CONFIG } from "@/config/topik-write.config";
 
 interface SentenceCompletionViewProps {
-  questionId: QuestionId.Q51 | QuestionId.Q52;
-  result: SentenceCompletionEvaluation;
+  questionType: QuestionType;
+  aiEvaluationResult: SentenceCompletionResponse;
 }
 
-function SentenceCompletionView({ questionId, result }: SentenceCompletionViewProps) {
+function SentenceCompletionView({ questionType, aiEvaluationResult }: SentenceCompletionViewProps) {
+  const { total_score, scores, strengths, weaknesses, improvement_suggestions } = aiEvaluationResult;
+  const { totalScore, scoreInfo } = QUESTION_CONFIG[questionType];
   const feedbackItems = [
-    { title: "강점", content: result.strengths },
-    { title: "약점", content: result.weaknesses },
-    { title: "개선 사항", content: result.improvement_suggestions },
+    { title: "강점", content: strengths },
+    { title: "약점", content: weaknesses },
+    { title: "개선 사항", content: improvement_suggestions },
   ];
-  if (!result) {
+  if (!aiEvaluationResult) {
     return null;
   }
   return (
     <>
-      <ReviewScoreCard title="총점" score={result.total_score} totalScore={TOTAL_SCORE_INFO[questionId].total} />
+      <ReviewScoreCard title="총점" score={total_score} totalScore={totalScore} />
       <div className="flex gap-5">
-        <ReviewScoreCard
-          title="ㄱ 빈칸"
-          score={result.scores.answer1}
-          totalScore={TOTAL_SCORE_INFO[questionId].answer1}
-        />
-        <ReviewScoreCard
-          title="ㄴ 빈칸"
-          score={result.scores.answer2}
-          totalScore={TOTAL_SCORE_INFO[questionId].answer2}
-        />
+        <ReviewScoreCard title="ㄱ 빈칸" score={scores.answer1} totalScore={scoreInfo.answer1} />
+        <ReviewScoreCard title="ㄴ 빈칸" score={scores.answer2} totalScore={scoreInfo.answer2} />
       </div>
       {feedbackItems.map((item) => (
         <FeedbackCard
@@ -63,83 +39,91 @@ function SentenceCompletionView({ questionId, result }: SentenceCompletionViewPr
 }
 
 interface EssayViewProps {
-  questionId: QuestionId.Q53 | QuestionId.Q54;
-  result: OpinionEssayEvaluation;
+  questionType: QuestionType;
+  aiEvaluationResult: WritingResponse;
   charCount: number;
 }
 
-function EssayView({ questionId, result, charCount }: EssayViewProps) {
+function EssayView({ questionType, aiEvaluationResult, charCount }: EssayViewProps) {
+  const { total_score, scores, strengths, weaknesses, improvement_suggestions } = aiEvaluationResult;
+  const { totalScore, scoreInfo, charLimits } = QUESTION_CONFIG[questionType];
   const scoreItems = [
     {
       title: "내용 및 과제수행",
-      score: result.scores?.task_performance || 0,
-      total: TOTAL_SCORE_INFO[questionId].task_performance,
+      score: scores?.task_performance || 0,
+      total: scoreInfo.task_performance,
     },
-    { title: "글의 전개 구조", score: result.scores?.structure || 0, total: TOTAL_SCORE_INFO[questionId].structure },
-    { title: "언어 사용", score: result.scores?.language_use || 0, total: TOTAL_SCORE_INFO[questionId].language_use },
+    { title: "글의 전개 구조", score: scores?.structure || 0, total: scoreInfo.structure },
+    { title: "언어 사용", score: scores?.language_use || 0, total: scoreInfo.language_use },
   ];
   const feedbackItems = [
-    { title: "강점", content: result.strengths },
-    { title: "약점", content: result.weaknesses },
-    { title: "개선 사항", content: result.improvement_suggestions },
+    { title: "강점", content: strengths },
+    { title: "약점", content: weaknesses },
+    { title: "개선 사항", content: improvement_suggestions },
   ];
 
-  const charCountEvaluation = getCharCountEvaluation(questionId, charCount);
+  const charCountEvaluation = getCharCountEvaluation(questionType, charCount);
 
   return (
     <>
-      <ReviewScoreCard title="총점" score={result.total_score} totalScore={TOTAL_SCORE_INFO[questionId].total} />
+      <ReviewScoreCard title="총점" score={total_score} totalScore={totalScore} />
       <ReviewScoreCard
         title="글자수"
         score={charCount}
-        totalScore={TOTAL_SCORE_INFO[questionId].char}
+        totalScore={`${charLimits?.min}~${charLimits?.max}`}
         evaluation={charCountEvaluation}
       />
       <div className="flex gap-5">
-        {scoreItems.map((item) => (
-          <ReviewScoreCard
-            key={item.title}
-            className="h-full p-5"
-            title={item.title}
-            score={item.score}
-            totalScore={item.total}
-          />
+        {scoreItems.map(({ title, score, total }) => (
+          <ReviewScoreCard key={title} className="h-full p-5" title={title} score={score} totalScore={total} />
         ))}
       </div>
-      {feedbackItems.map((item) => (
-        <FeedbackCard
-          key={item.title}
-          title={item.title}
-          contents={item.content?.length > 0 ? item.content : `${item.title}이 없습니다.`}
-        />
+      {feedbackItems.map(({ title, content }) => (
+        <FeedbackCard key={title} title={title} contents={content?.length > 0 ? content : `${title}이 없습니다.`} />
       ))}
     </>
   );
 }
 
 interface AIEvaluationReviewProps {
-  questionId: QuestionId;
+  questionType: QuestionType;
   evaluationResult: EvaluationResponseUnion;
-  charCount: number;
+  charCount?: number;
 }
 
-export default function AIEvaluationReview({ questionId, evaluationResult, charCount }: AIEvaluationReviewProps) {
+export default function AIEvaluationReview({ questionType, evaluationResult, charCount }: AIEvaluationReviewProps) {
   if (!evaluationResult) {
     return null;
   }
-  switch (questionId) {
-    case QuestionId.Q51:
-    case QuestionId.Q52:
+  switch (questionType) {
+    case QuestionType.Q51:
+    case QuestionType.Q52:
       return (
-        <SentenceCompletionView questionId={questionId} result={evaluationResult as SentenceCompletionEvaluation} />
+        <SentenceCompletionView
+          questionType={questionType}
+          aiEvaluationResult={evaluationResult as SentenceCompletionResponse}
+        />
       );
-    case QuestionId.Q53:
-    case QuestionId.Q54:
+    case QuestionType.Q53:
+    case QuestionType.Q54:
       return (
-        <EssayView questionId={questionId} result={evaluationResult as OpinionEssayEvaluation} charCount={charCount} />
+        <EssayView
+          questionType={questionType}
+          aiEvaluationResult={evaluationResult as WritingResponse}
+          charCount={charCount || 0}
+        />
       );
     default:
-      const _: never = questionId;
-      throw new Error(`Invalid questionId: ${_}`);
+      throw new Error(`Invalid questionType: ${questionType}`);
   }
 }
+
+const getCharCountEvaluation = (questionType: QuestionType, charCount: number) => {
+  if (questionType === QuestionType.Q53 || questionType === QuestionType.Q54) {
+    const { charLimits } = QUESTION_CONFIG[questionType];
+    if (charLimits && charCount < charLimits.min) return "분량 미달";
+    if (charLimits && charCount > charLimits.max) return "분량 초과";
+    return "적정 범위";
+  }
+  return "";
+};

@@ -1,23 +1,17 @@
-import { ApiClient } from "@/lib/ky";
+import { ApiClient, handleKyError } from "@/lib/ky";
 import { NextResponse } from "next/server";
 import { CorrectionResponse } from "@/types/topik-correct.types";
-
-import { topikWritingCorrectorRequestSchemaWithEval } from "@/app/schemas/topik-write.schema";
-import { isHTTPError, isKyError, isTimeoutError } from "ky";
+import { topikWritingCorrectorRequestSchema } from "@/app/schemas/topik-write.schema";
 import { cookies } from "next/headers";
-import { readFile } from "fs/promises";
-import path from "path";
-import { IMAGE_MIME_TYPES_BY_EXT } from "@/config/topik-write.config";
 import {
+  AgentUserMessagePart,
   ErrorResponse,
   LlmMessageRole,
   TopikWritingAgentRequest,
-  TopikWritingAgentResponse,
+  TopikWritingEvent,
 } from "@/types/topik.types";
-
-const AGENT_APP_NAME = process.env.AGENT_APP_CORRECTOR ?? "topik_writing_corrector";
-
-type AgentUserMessagePart = { text: string } | { inline_data: { mime_type: string; data: string } };
+import { createErrorResponse } from "@/lib/utils";
+import { AGENT_APP_CORRECTOR } from "@/config/shared";
 
 export async function POST(request: Request): Promise<NextResponse<CorrectionResponse | ErrorResponse>> {
   const cookieStore = await cookies();
@@ -27,77 +21,69 @@ export async function POST(request: Request): Promise<NextResponse<CorrectionRes
   const clientRequest = await request.json();
 
   try {
-    const { success, data: parsedData, error } = topikWritingCorrectorRequestSchemaWithEval.safeParse(clientRequest);
+    const { success, data: parsedData, error } = topikWritingCorrectorRequestSchema.safeParse(clientRequest);
 
     if (!success) {
       console.error("validation error:", error);
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      return createErrorResponse(error.message, 400, "VALIDATION_ERROR");
     }
 
-    const { questionNumber, questionPrompt, answer, imageUrl, evaluationResult } = parsedData;
+    const { year, round, questionNumber, answer, evaluationResult } = parsedData;
 
-    const requestPayload = {
+    const correctionInputPayload = {
+      exam_year: year,
+      exam_round: round,
       question_number: Number(questionNumber),
-      question_prompt: questionPrompt,
       answer,
       evaluation_result: evaluationResult,
-    };
+    } as Record<string, unknown>;
 
-    const agentUserMessageParts: Array<AgentUserMessagePart> = [{ text: JSON.stringify(requestPayload) }];
+    const agentUserMessageParts: AgentUserMessagePart[] = [{ text: JSON.stringify(correctionInputPayload) }];
 
-    if (imageUrl) {
+    const agentEvents: TopikWritingEvent[] = await ApiClient.post(
+      "run",
+      TopikWritingAgentRunRequest(agentUserMessageParts, userId, sessionId)
+    );
+
+    const textOutputEvent = agentEvents
+      .slice()
+      .reverse()
+      .find((e) => e.content?.parts[0]?.text);
+
+    if (textOutputEvent && textOutputEvent.content?.parts[0]?.text) {
+      const textFromAgent = textOutputEvent.content.parts[0].text;
+
+      const cleanedJsonString = textFromAgent
+        .replace(/```json\n?/, "")
+        .replace(/```$/, "")
+        .trim();
+
       try {
-        const relative = imageUrl.replace(/^\//, "");
-        const filePath = path.join(process.cwd(), "public", relative);
-        const buffer = await readFile(filePath);
-        const ext = path.extname(filePath).toLowerCase();
-        const mimeType = IMAGE_MIME_TYPES_BY_EXT[ext] ?? "application/octet-stream";
-
-        agentUserMessageParts.push({
-          inline_data: { mime_type: mimeType, data: buffer.toString("base64") },
-        });
+        const agentResponse = JSON.parse(cleanedJsonString);
+        return NextResponse.json(agentResponse);
       } catch (e) {
-        console.error("Failed to attach image for correction:", e);
+        console.error("Failed to parse final JSON result from agent:", e, "text:", cleanedJsonString);
+        return createErrorResponse("Invalid JSON result from agent", 500);
       }
     }
 
-    const agentResponse = await ApiClient.post<TopikWritingAgentRequest, TopikWritingAgentResponse>(
-      "run",
-      TopikWritingAgentRunRequest(AGENT_APP_NAME, agentUserMessageParts, userId, sessionId)
-    );
-
-    const eventText = agentResponse[0].content.parts[0].text;
-    return NextResponse.json(JSON.parse(eventText) as CorrectionResponse);
+    return createErrorResponse("No final response with text from agent", 500);
   } catch (err) {
     console.error("correction error:", err);
-
-    const errorBase = { error: "Agent proxy failed" };
-    if (isHTTPError(err)) {
-      return NextResponse.json(
-        { ...errorBase, code: "HTTP_ERROR", details: err.message },
-        { status: err.response.status }
-      );
-    }
-    if (isKyError(err)) {
-      return NextResponse.json({ ...errorBase, code: "KY_ERROR", details: err.message }, { status: 500 });
-    }
-    if (isTimeoutError(err)) {
-      return NextResponse.json({ ...errorBase, code: "TIMEOUT", details: err.message }, { status: 504 });
-    }
-    return NextResponse.json({ ...errorBase, code: "UNKNOWN_ERROR" }, { status: 500 });
+    return handleKyError(err);
   }
 }
 
 function TopikWritingAgentRunRequest(
-  appName: string,
-  parts: Array<AgentUserMessagePart>,
+  parts: AgentUserMessagePart[],
   userId: string,
   sessionId: string
 ): TopikWritingAgentRequest {
   return {
-    app_name: appName,
+    app_name: AGENT_APP_CORRECTOR,
     user_id: userId,
     session_id: sessionId,
+    stream: true,
     new_message: { parts, role: LlmMessageRole.USER },
   };
 }

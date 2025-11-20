@@ -1,9 +1,11 @@
-import { QuestionId } from "@/types/topik.types";
+import { QuestionType } from "@/types/topik.types";
 import z from "zod";
 
 export const topikWritingEvaluatorRequestSchema = z.object({
-  questionNumber: z.enum(QuestionId),
-  questionPrompt: z.string().min(1, "Question cannot be empty."),
+  question_id: z.string(),
+  year: z.number(),
+  round: z.number(),
+  questionNumber: z.enum(QuestionType),
   answer: z.union([
     z.string(),
     z.object({
@@ -11,19 +13,9 @@ export const topikWritingEvaluatorRequestSchema = z.object({
       answer2: z.string(),
     }),
   ]),
-  imageUrl: z.string().optional(),
 });
 
 export type TopikWritingEvaluatorRequest = z.output<typeof topikWritingEvaluatorRequestSchema>;
-
-export const topikWritingCorrectorRequestSchema = z.object({
-  questionNumber: z.enum([QuestionId.Q53, QuestionId.Q54]),
-  questionPrompt: z.string().min(1, "Question cannot be empty."),
-  answer: z.string(),
-  imageUrl: z.string().optional(),
-});
-
-export type TopikWritingCorrectorRequest = z.output<typeof topikWritingCorrectorRequestSchema>;
 
 const evaluationResultSchema = z.object({
   total_score: z.number(),
@@ -33,6 +25,12 @@ const evaluationResultSchema = z.object({
   overall_feedback: z.string(),
 });
 
-export const topikWritingCorrectorRequestSchemaWithEval = topikWritingCorrectorRequestSchema.extend({
+export const topikWritingCorrectorRequestSchema = z.object({
+  year: z.number(),
+  round: z.number(),
+  questionNumber: z.enum([QuestionType.Q53, QuestionType.Q54]),
+  answer: z.string(),
   evaluationResult: evaluationResultSchema,
 });
+
+export type TopikWritingCorrectorRequest = z.output<typeof topikWritingCorrectorRequestSchema>;

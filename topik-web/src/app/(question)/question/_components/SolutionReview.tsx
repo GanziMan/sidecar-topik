@@ -1,25 +1,26 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { EvaluationResponseUnion } from "@/types/topik-write.types";
-import { QuestionId } from "@/types/topik.types";
+import { QuestionType } from "@/types/topik.types";
 import clsx from "clsx";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import tw from "tailwind-styled-components";
-import AICorrectionReview from "./AICorrectionReview";
-import { fetchCorrection } from "../actions";
-import { renderToStaticMarkup } from "react-dom/server";
-import { QuestionContents } from "../mock";
-import { CorrectionResponse } from "@/types/topik-correct.types";
-import AIEvaluationReview from "./SolutionReview/AIEvaluationReview";
+import AICorrectionReview from "./SolutionReview/AICorrectionReview";
 import ModelReview from "./SolutionReview/ModelReview";
-import toast from "react-hot-toast";
 import LoadingOverlay from "@/components/LoadingOverlay";
+import EvaluationHistory from "./SolutionReview/EvaluationHistory";
+import { useCorrection } from "./hooks/useCorrection";
+import { useEvaluationHistory } from "./hooks/useEvaluationHistory";
+import EvaluationTabContent from "./SolutionReview/EvaluationTabContent";
+import { Button } from "@/components/ui/button";
 
-type ReviewTab = "ai_evaluation" | "ai_correction" | "model";
+type ReviewTab = "ai_evaluation" | "ai_correction" | "model" | "ai_evaluation_comparison";
 
 interface SolutionReviewProps {
-  questionId: QuestionId;
+  questionId: string;
+  questionYear: number;
+  questionRound: number;
+  questionType: QuestionType;
   evaluationResult: EvaluationResponseUnion;
   essayAnswer: string;
   charCount: number;
@@ -29,48 +30,30 @@ const REVIEW_TABS: Array<{ label: string; value: ReviewTab }> = [
   { label: "AI 채점", value: "ai_evaluation" },
   { label: "AI 첨삭", value: "ai_correction" },
   { label: "모범 답안", value: "model" },
+  { label: "AI 채점 비교", value: "ai_evaluation_comparison" },
 ];
 
-export default function SolutionReview({ questionId, evaluationResult, essayAnswer, charCount }: SolutionReviewProps) {
+export default function SolutionReview({
+  questionId,
+  questionYear,
+  questionRound,
+  questionType,
+  evaluationResult,
+  essayAnswer,
+  charCount,
+}: SolutionReviewProps) {
   const [reviewType, setReviewType] = useState<ReviewTab>("ai_evaluation");
-  const [correctionResult, setCorrectionResult] = useState<CorrectionResponse | null>(null);
-  const [isCorrectionLoading, setIsCorrectionLoading] = useState(false);
-  const [correctionError, setCorrectionError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (reviewType !== "ai_correction" || correctionResult) {
-      return;
-    }
+  const { correctionResult, isCorrectionLoading } = useCorrection({
+    reviewType,
+    questionYear,
+    questionRound,
+    questionType,
+    essayAnswer,
+    evaluationResult,
+  });
 
-    const getCorrection = async () => {
-      if (questionId !== QuestionId.Q53 && questionId !== QuestionId.Q54) {
-        return;
-      }
-      setIsCorrectionLoading(true);
-      setCorrectionError(null);
-      try {
-        const context = renderToStaticMarkup(QuestionContents[questionId])
-          ?.replace(/<[^>]*>/g, " ")
-          ?.replace(/\s+/g, " ")
-          .trim();
-        const result = await fetchCorrection(
-          questionId,
-          essayAnswer,
-          context,
-          evaluationResult,
-          questionId === QuestionId.Q53 ? "/images/mock/img-53problem.jpeg" : undefined
-        );
-        setCorrectionResult(result);
-      } catch (e: any) {
-        toast.error("첨삭 중 오류가 발생했습니다. \n다시 후 다시 시도해주세요.");
-        setCorrectionError(e.message || "Failed to fetch correction.");
-      } finally {
-        setIsCorrectionLoading(false);
-      }
-    };
-
-    getCorrection();
-  }, [reviewType, correctionResult, questionId, essayAnswer, evaluationResult]);
+  const { evaluationRecords } = useEvaluationHistory(questionId, evaluationResult);
 
   const handleReviewTab = (review: ReviewTab) => {
     setReviewType(review);
@@ -90,18 +73,25 @@ export default function SolutionReview({ questionId, evaluationResult, essayAnsw
           ))}
         </SolutionReviewActions>
         {reviewType === "ai_evaluation" && (
-          <AIEvaluationReview questionId={questionId} evaluationResult={evaluationResult} charCount={charCount} />
+          <EvaluationTabContent
+            questionType={questionType}
+            initialEvaluationResult={evaluationResult}
+            evaluationRecords={evaluationRecords}
+            charCount={charCount}
+          />
         )}
         {reviewType === "ai_correction" && correctionResult && (
           <AICorrectionReview
-            questionId={questionId}
+            questionType={questionType}
             correctionResult={correctionResult}
             isLoading={isCorrectionLoading}
-            error={correctionError}
             initialScore={evaluationResult.total_score}
           />
         )}
-        {reviewType === "model" && <ModelReview questionId={questionId} evaluationResult={evaluationResult} />}
+        {reviewType === "model" && <ModelReview questionType={questionType} evaluationResult={evaluationResult} />}
+        {reviewType === "ai_evaluation_comparison" && (
+          <EvaluationHistory questionId={questionId} questionType={questionType} evaluationResult={evaluationResult} />
+        )}
       </SolutionReviewContainer>
     </LoadingOverlay>
   );

@@ -1,44 +1,35 @@
 import { Card } from "@/components/ui/card";
-import {
-  EvaluationResponseUnion,
-  InfoDescriptionEvaluation,
-  OpinionEssayEvaluation,
-  SentenceCompletionEvaluation,
-} from "@/types/topik-write.types";
-import { QuestionId } from "@/types/topik.types";
+import { EvaluationResponseUnion, SentenceCompletionResponse, WritingResponse } from "@/types/topik-write.types";
+import { QuestionType } from "@/types/topik.types";
 
 interface ModelReviewProps {
-  questionId: QuestionId;
+  questionType: QuestionType;
   evaluationResult: EvaluationResponseUnion;
 }
 
-function getModelAnswerContent(questionId: QuestionId, evaluationResult: EvaluationResponseUnion): string {
-  switch (questionId) {
-    case QuestionId.Q51:
-    case QuestionId.Q52: {
-      const r = evaluationResult as SentenceCompletionEvaluation;
-      return `㉠ ${r.model_answer.answer1} \n ㉡ ${r.model_answer.answer2}`;
+function getModelAnswerContent(questionType: QuestionType, evaluationResult: EvaluationResponseUnion): string {
+  switch (questionType) {
+    case QuestionType.Q51:
+    case QuestionType.Q52: {
+      const { model_answer } = evaluationResult as SentenceCompletionResponse;
+      return `㉠ ${model_answer.answer1} \n ㉡ ${model_answer.answer2}`;
     }
-    case QuestionId.Q53: {
-      const r = evaluationResult as InfoDescriptionEvaluation;
-      return r.model_answer;
-    }
-    case QuestionId.Q54: {
-      const r = evaluationResult as OpinionEssayEvaluation;
-      return r.model_answer;
+    case QuestionType.Q53:
+    case QuestionType.Q54: {
+      const { model_answer } = evaluationResult as WritingResponse;
+      return model_answer;
     }
     default:
-      const _: never = questionId;
-      throw new Error(`Invalid questionId: ${_}`);
+      throw new Error(`Invalid questionType: ${questionType}`);
   }
 }
 
-export default function ModelReview({ questionId, evaluationResult }: ModelReviewProps) {
-  const content = getModelAnswerContent(questionId, evaluationResult);
+export default function ModelReview({ questionType, evaluationResult }: ModelReviewProps) {
+  const modelAnswerContent = getModelAnswerContent(questionType, evaluationResult);
   return (
     <Card className="p-5 bg-[#F7F7F7] flex flex-col gap-[14px] w-[513px]">
       <p className="font-semibold">모범 답안</p>
-      <p className="whitespace-pre-line">{content}</p>
+      <p className="whitespace-pre-line">{modelAnswerContent}</p>
     </Card>
   );
 }

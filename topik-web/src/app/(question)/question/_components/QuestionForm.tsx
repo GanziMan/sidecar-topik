@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
-import { QuestionTitle } from "../mock";
-import { SentenceCompletionAnswer } from "@/types/topik-write.types";
-
-import { QuestionId } from "@/types/topik.types";
+import { GetQuestionContentResponse, SentenceCompletionAnswer } from "@/types/topik-write.types";
+import { QuestionType } from "@/types/topik.types";
 import Essay from "./Essay";
 import SentenceCompletion from "./SentenceCompletion";
+import { QUESTION_CONFIG } from "@/config/topik-write.config";
 
 interface QuestionFormProps {
-  id: QuestionId;
+  questionType: QuestionType;
+  questionContent: GetQuestionContentResponse;
   isLoading: boolean;
   handleSentenceCompletionAnswerChange: (icon: string, e: React.ChangeEvent<HTMLInputElement>) => void;
   handleEssayChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
@@ -19,50 +18,50 @@ interface QuestionFormProps {
   isSubmitted: boolean;
 }
 
-function QuestionFormComponent({
-  id,
-  isLoading,
-  handleSentenceCompletionAnswerChange,
-  handleEssayChange,
-  sentenceCompletionAnswer,
-  essayAnswer,
-  inputDisabled,
-  isSubmitted,
-}: QuestionFormProps) {
-  switch (id) {
-    case QuestionId.Q51:
-    case QuestionId.Q52:
-      return (
-        <SentenceCompletion
-          id={id}
-          handleSentenceCompletionAnswerChange={handleSentenceCompletionAnswerChange}
-          sentenceCompletionAnswer={sentenceCompletionAnswer}
-          inputDisabled={inputDisabled || isLoading}
-          isSubmitted={isSubmitted}
-        />
-      );
-    case QuestionId.Q53:
-    case QuestionId.Q54:
-      return (
-        <Essay
-          id={id}
-          handleEssayChange={handleEssayChange}
-          essayAnswer={essayAnswer}
-          inputDisabled={inputDisabled || isLoading}
-        />
-      );
-  }
-}
-
 export default function QuestionForm(props: QuestionFormProps) {
-  const { id } = props;
+  const { questionType, questionContent, isLoading, inputDisabled } = props;
+  const { title, question_text, image_url } = questionContent;
+  const { type, maxLength } = QUESTION_CONFIG[questionType];
 
   return (
-    <div className="p-7.5 flex flex-col gap-7.5 bg-white max-w-[553px]">
+    <div className="p-7.5 flex flex-col gap-7.5 bg-white w-[553px]">
       <p className="font-semibold">
-        {id}. {QuestionTitle(id)}
+        {questionType}. {title}
       </p>
-      <QuestionFormComponent {...props} />
+
+      {questionType === QuestionType.Q53 && image_url ? (
+        <img
+          src={image_url}
+          className="w-full h-auto"
+          alt={`${questionType}번 문제 이미지`}
+          loading="lazy"
+          width={553}
+          height={300}
+        />
+      ) : (
+        <div
+          className="flex flex-col border border-[#B4B4B4]"
+          dangerouslySetInnerHTML={{ __html: question_text?.replace(/className=/g, "class=") ?? "" }}
+        />
+      )}
+
+      {type === "sentenceCompletion" && (
+        <SentenceCompletion
+          handleSentenceCompletionAnswerChange={props.handleSentenceCompletionAnswerChange}
+          sentenceCompletionAnswer={props.sentenceCompletionAnswer}
+          inputDisabled={inputDisabled || isLoading}
+          isSubmitted={props.isSubmitted}
+        />
+      )}
+
+      {type === "essay" && (
+        <Essay
+          maxLength={maxLength}
+          handleEssayChange={props.handleEssayChange}
+          essayAnswer={props.essayAnswer}
+          inputDisabled={inputDisabled || isLoading}
+        />
+      )}
     </div>
   );
 }

@@ -1,20 +1,13 @@
-import html
+from .prompt import WRITING_CORRECTOR_TEMPLATE
+from config import TOTAL_SCORE_INFO
 import json
 import logging
 from typing_extensions import override
 from google.genai import types
 from google.adk.agents import BaseAgent, InvocationContext, LlmAgent
 
-from .prompt import WRITING_CORRECTOR_TEMPLATE
 
 logger = logging.getLogger(__name__)
-
-
-# TODO: Get from config
-TOTAL_SCORE_INFO = {
-    "53": {"total": 30},
-    "54": {"total": 50},
-}
 
 
 class TopikWritingCorrector(BaseAgent):
@@ -46,14 +39,10 @@ class TopikWritingCorrector(BaseAgent):
     @override
     async def _run_async_impl(self, ctx: InvocationContext):
         payload_string = ""
-        image_parts: list[types.Part] = []
         if ctx.user_content and ctx.user_content.parts:
             for part in ctx.user_content.parts:
                 if getattr(part, "text", None):
-                    if not payload_string:
-                        payload_string = part.text or ""
-                elif getattr(part, "inline_data", None):
-                    image_parts.append(part)
+                    payload_string = part.text or ""
 
         if not payload_string:
             raise ValueError("User input JSON payload is required.")
@@ -63,10 +52,10 @@ class TopikWritingCorrector(BaseAgent):
         except json.JSONDecodeError:
             raise ValueError("Failed to decode user input JSON.")
 
+        exam_year = payload_json.get("exam_year")
+        exam_round = payload_json.get("exam_round")
         question_number = payload_json.get("question_number")
-        question_prompt = payload_json.get("question_prompt")
         answer = payload_json.get("answer")
-        answer_length = len(answer) if answer else 0
         evaluation_result = payload_json.get("evaluation_result")
 
         score_guideline = ""
@@ -80,7 +69,6 @@ class TopikWritingCorrector(BaseAgent):
                     potential_gain = perfect_score - total_score
                     score_guideline = f"학생의 현재 점수는 {total_score}점입니다. 'expected_score_gain' 값은 {potential_gain}점을 초과할 수 없습니다. (53번 만점: 30점, 54번 만점: 50점)"
 
-        # 프롬프트 구성
         main_prompt = WRITING_CORRECTOR_TEMPLATE.format(
             score_guideline=score_guideline)
         if evaluation_result:
@@ -88,28 +76,33 @@ class TopikWritingCorrector(BaseAgent):
                 f"\n\n[이전 AI 채점 결과]\n{json.dumps(evaluation_result, indent=2, ensure_ascii=False)}"
             )
 
-        answer_length_prompt = (
-            f" \n[글자수]\n{answer_length}"
-            if answer_length is not None
-            else ""
+        # Combine all information into a single final prompt
+        final_prompt = (
+            f"아래 주어진 시험 정보(연도, 회차, 문제 번호)를 사용하여 문제의 원본 내용(question_text or image)을 먼저 조회하시오.\n"
+            f"그 다음, 학생의 답안과 이전 채점 결과를 바탕으로 교정을 수행하시오.\n\n"
+            f"--- 시험 정보 ---\n"
+            f"exam_year: {exam_year}\n"
+            f"exam_round: {exam_round}\n"
+            f"question_number: {question_number}\n\n"
+            f"--- 학생 답안 ---\n"
+            f"{answer}\n\n"
+            f"--- 교정 지침 및 이전 채점 결과 ---\n"
+            f"{main_prompt}"
         )
-        standard_prompt = f"{main_prompt}\n\n[문제]\n{html.unescape(question_prompt)}\n\n[학생 답안]\n{answer} \n\n{answer_length_prompt}"
 
-        if question_number == 53 and image_parts:
-            ctx.user_content = types.Content(
-                parts=[types.Part(text=standard_prompt), *image_parts]
-            )
-        else:
-            ctx.user_content = types.Content(
-                parts=[types.Part(text=standard_prompt)])
+        ctx.user_content = types.Content(
+            parts=[types.Part(text=final_prompt)]
+        )
 
-        routing_map: dict[int, LlmAgent] = {
+        routing_map = {
             53: self.info_description_agent,
             54: self.opinion_essay_agent,
         }
+
         sub_agent = routing_map.get(question_number)
+
         if sub_agent is None:
-            raise ValueError("Corrector supports only question 53 and 54.")
+            raise ValueError(f"Invalid question number: {question_number}")
 
         final_event = None
         try:
