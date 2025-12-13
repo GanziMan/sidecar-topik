@@ -5,10 +5,18 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/",
-        destination: "/question/2025/1/51",
+        destination: "/login",
         permanent: true,
       },
     ];
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "qyztgmuupnjuhwrboaei.supabase.co",
+      },
+    ],
   },
 };
 

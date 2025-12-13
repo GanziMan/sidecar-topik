@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Header from "../components/Header";
-import { Toaster } from "@/components/toast";
+import LayoutClient from "./layoutClient";
+import AuthProvider from "@/providers/AuthProvider";
+import { getQuestionOptions } from "@/lib/serverActions/questions";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,20 +20,19 @@ export const metadata: Metadata = {
   description: "TOPIK 주관식 문항 평가 서비스",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const availableQuestions = await getQuestionOptions();
+
   return (
     <html lang="ko">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        style={{ backgroundColor: "#F5F5F5", marginBottom: "90px" }}
-      >
-        <Header />
-        {children}
-        <Toaster />
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <AuthProvider>
+          <LayoutClient availableQuestions={availableQuestions}>{children}</LayoutClient>
+        </AuthProvider>
       </body>
     </html>
   );

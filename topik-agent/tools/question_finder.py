@@ -1,74 +1,84 @@
 import logging
 import os
-from supabase import create_client, Client
 from dotenv import load_dotenv
-from markdownify import markdownify as md
+import requests
 
 logger = logging.getLogger(__name__)
 
 load_dotenv()
 
 
-def get_supabase_client() -> Client:
-    supabase_url = os.environ.get("SUPABASE_URL")
-    supabase_key = os.environ.get("SUPABASE_ANON_KEY")
-    if not supabase_url or not supabase_key:
-        raise ValueError(
-            "Supabase URL and Key must be set in environment variables.")
-    return create_client(supabase_url, supabase_key)
-
-
-def question_finder(exam_year: int, exam_round: int, question_id: int) -> dict:
+def question_finder(exam_year: int, exam_round: int, question_number: int) -> str:
     """
-    Fetches question data from Supabase for a given question ID.
+    TOPIK Web API에서 문항 데이터를 조회합니다.
+    LLM이 이해하기 쉬운 최종 문자열로 포맷팅합니다.
 
     Args:
-        question_id: The ID of the question to fetch.
+        exam_year: 시험 연도.
+        exam_round: 시험 회차.
+        question_number: 조회할 문항 번호.
 
     Returns:
-        A dictionary containing the title, question text, and image URL.
+        포맷팅된 문항 데이터 문자열. 오류 발생 시 오류 메시지를 담은 문자열을 반환합니다.
     """
     try:
-        supabase = get_supabase_client()
+        web_app_url = os.environ.get("CLIENT_URL")
+        supabase_url = os.environ.get("SUPABASE_URL")
 
-        select_query = "title, question_text"
-        if question_id == 53:
-            select_query += ", question_img_url:question_img_path(publicUrl)"
+        api_url = f"{web_app_url}/api/questions/{exam_year}/{exam_round}/{question_number}"
 
-        response = supabase.from_("questions").select(
-            select_query
-        ).eq("exam_year", exam_year).eq("exam_round", exam_round).eq("question_number", question_id).single().execute()
+        response = requests.get(api_url, timeout=10)
+        response.raise_for_status()
 
-        if response.data:
-            data = response.data
-            img_data = data.get("question_img_url")
-            img_url = None
-            if img_data:
-                if isinstance(img_data, list) and img_data:
-                    img_url = img_data[0].get("publicUrl")
-                elif isinstance(img_data, dict):
-                    img_url = img_data.get("publicUrl")
+        question_data = response.json()
 
-            question_text_html = data.get("question_text", "")
-            question_text_md = md(
-                question_text_html) if question_text_html else ""
+        # content JSONB 파싱
+        content_obj = question_data.get("content", {})
 
-            return {
-                "title": data.get("title"),
-                "question_text": question_text_md,
-                "image": img_url
-            }
-        else:
-            return {"error": "Question not found."}
+        instruction = content_obj.get("instruction", "")
+        context = content_obj.get("context", {})
+        context_text = context.get("content", "")
+        images = context.get("images")
+        formatted_parts = ["[문제 정보]"]
 
-    except Exception as e:
-        return {"error": f"An error occurred: {str(e)}"}
+        if instruction:
+            formatted_parts.append(f"- 지시문: {instruction}")
+
+        if context_text:
+            formatted_parts.append(f"- 내용: {context_text}")
+
+        if images:
+            storage_base_url = f"{supabase_url}/storage/v1/object/public/images/{exam_year}/{exam_round}/{question_number}"
+
+            if isinstance(images, dict):
+                alt = images.get("alt", "")
+                caption = images.get("caption", "")
+                url = images.get("url", "")
+
+                info = f"이미지: {alt}"
+                if caption:
+                    info += f" ({caption})"
+
+                if url:
+                    full_url = f"{storage_base_url}/{url}"
+                    info += f" [URL: {full_url}]"
+
+                formatted_parts.append(f"- {info}")
+        formatted_question_string = "\n".join(formatted_parts)
+
+        return formatted_question_string
+
+    except requests.exceptions.HTTPError as http_error:
+        error_message = f"Failed to fetch question data: {http_error.response.status_code} {http_error.response.reason}"
+        logger.error(
+            f"HTTP error occurred: {error_message} for URL: {http_error.request.url}")
+        return f"[오류] {error_message}"
 
 
 if __name__ == '__main__':
-    # Example usage:
-    exam_year = 2025
-    exam_round = 1
-    question_id = 54  # Example ID
-    question_data = question_finder(exam_year, exam_round, question_id)
+    test_year = 2025
+    test_round = 1
+    test_question_number = 53
+    question_data = question_finder(
+        test_year, test_round, test_question_number)
     print(question_data)

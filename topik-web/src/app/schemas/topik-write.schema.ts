@@ -1,4 +1,4 @@
-import { QuestionType } from "@/types/topik.types";
+import { QuestionType } from "@/types/common.types";
 import z from "zod";
 
 export const topikWritingEvaluatorRequestSchema = z.object({
@@ -34,3 +34,9 @@ export const topikWritingCorrectorRequestSchema = z.object({
 });
 
 export type TopikWritingCorrectorRequest = z.output<typeof topikWritingCorrectorRequestSchema>;
+
+export const questionParamsSchema = z.object({
+  year: z.coerce.number().int().default(2025),
+  round: z.coerce.number().int().default(1),
+  type: z.enum(QuestionType).default(QuestionType.Q51),
+});
