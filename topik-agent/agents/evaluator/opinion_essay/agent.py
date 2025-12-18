@@ -1,32 +1,37 @@
 from google.adk.agents import LlmAgent
 from config.model import DEFAULT_PLANNER, GENERATE_CONTENT_CONFIG, LLM_MODEL
-from config.prompt_manager import prompt_manager
-from agents.evaluator.opinion_essay.prompt import FEWSHOT_PROMPT, OUTPUT_FORMAT_PROMPT
-from tools.question_finder import question_finder
 import config.prompt_keys as keys
-from prompt_utils import format_context_prompt
+from prompts.utils import format_context_prompt
+from schemas.response import EvaluatorWritingOutput
 
 
 def _build_system_prompt(_):
-    """Builds the system prompt string for the agent."""
-    context_data = prompt_manager.get_prompt(
-        keys.EVALUATOR_SUB_AGENTS_OPINION_ESSAY_CONTEXT_PROMPT
-    ).value
+    """TOPIK 54번 논술문 평가 에이전트 시스템 프롬프트 생성"""
+    from config.prompt_manager import prompt_manager
 
-    formatted_context = format_context_prompt(context_data)
-    return f"""
-    {OUTPUT_FORMAT_PROMPT}
-    {formatted_context}
-    {FEWSHOT_PROMPT}
-    """
+    role = prompt_manager.get_prompt(keys.EVALUATOR_ROLE_PROMPT).value
+    rules_common = prompt_manager.get_prompt(keys.EVALUATOR_RULES_PROMPT).value
+    rules_specific = prompt_manager.get_prompt(keys.EVALUATOR_OE_RULES_PROMPT).value
+
+    fewshot = prompt_manager.get_prompt(keys.EVALUATOR_OE_FEWSHOT_PROMPT).value
+    rubric_json = prompt_manager.get_prompt(
+        keys.EVALUATOR_OE_CONTEXT_RUBRIC_PROMPT).value
+
+    formatted_rubric = format_context_prompt(rubric_json)
+
+    parts = [role, rules_common, rules_specific, formatted_rubric, fewshot]
+    return "\n\n".join(part.strip() for part in parts if part)
 
 
 opinion_essay_evaluator_agent = LlmAgent(
     name="opinion_essay_evaluator_agent",
-    instruction=_build_system_prompt,
     model=LLM_MODEL.GEMINI_25FLASH,
     description="TOPIK 54번 논술문 평가 에이전트",
     generate_content_config=GENERATE_CONTENT_CONFIG,
     planner=DEFAULT_PLANNER,
-    tools=[question_finder],
+    output_schema=EvaluatorWritingOutput,
+    disallow_transfer_to_parent=True,
+    disallow_transfer_to_peers=True,
 )
+
+opinion_essay_evaluator_agent.instruction = _build_system_prompt

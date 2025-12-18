@@ -30,6 +30,7 @@
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.81.1",
     "@tailwindcss/postcss": "^4.1.13",
+    "@tanstack/react-query": "^5.90.12",
     "ai": "^5.0.75",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -48,6 +49,7 @@
     "tailwindcss": "^4.0.0",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2",
+    "winston": "^3.19.0",
     "zod": "^4.1.12",
     "zustand": "^5.0.8"
   },
@@ -63,6 +65,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/winston": "^2.4.4",
     "@vitest/browser-playwright": "^4.0.7",
     "@vitest/coverage-v8": "^4.0.7",
     "autoprefixer": "^10.4.21",

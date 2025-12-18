@@ -114,7 +114,7 @@ function ScoreChangeIndicator({ initialScore, scoreGain }: ScoreChangeIndicatorP
         <span>{finalScore}점</span>
       </p>
       {isScoreGained && (
-        <p className="flex items-center gap-0.5">
+        <div className="flex items-center gap-0.5">
           <Image
             className="mt-0.5"
             src="/icons/icon-triangle-up-red.svg"
@@ -125,7 +125,7 @@ function ScoreChangeIndicator({ initialScore, scoreGain }: ScoreChangeIndicatorP
           <p className="text-[#FF645F] text-xs">
             {scoreGain} <span className="text-[#979AA0] text-[9px]">점</span>
           </p>
-        </p>
+        </div>
       )}
     </div>
   );
@@ -161,7 +161,7 @@ function CorrectedEssayView({ correctionResult }: CorrectedEssayViewProps) {
       const originalSentence = paragraphs[pIndex][sIndex];
       paragraphs[pIndex][sIndex] = originalSentence.replace(
         original.trim(),
-        `<span class='text-blue-500 font-bold' title="${reason}"><span class='text-xs text-red-300'>#${
+        `<span class='text-blue-500 font-bold' title="${reason}"><span class='text-xs text-red-300'>${
           index + 1
         }</span>${revised}</span>`
       );

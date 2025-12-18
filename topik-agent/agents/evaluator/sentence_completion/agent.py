@@ -1,28 +1,33 @@
 from google.adk.agents import LlmAgent
 from config.model import DEFAULT_PLANNER, GENERATE_CONTENT_CONFIG, LLM_MODEL
-from config.prompt_manager import prompt_manager
-from agents.evaluator.sentence_completion.prompt import FEWSHOT_PROMPT, OUTPUT_FORMAT_PROMPT
-
-from tools.question_finder import question_finder
 import config.prompt_keys as keys
-from prompt_utils import format_context_prompt
+from prompts.utils import format_context_prompt
 import logging
+from schemas.response import EvaluatorSentenceCompletionOutput
+
 logger = logging.getLogger(__name__)
 
 
 def _build_system_prompt(_):
-    """Builds the system prompt string for the agent."""
-    context_data = prompt_manager.get_prompt(
-        keys.EVALUATOR_SUB_AGENTS_SENTENCE_COMPLETION_CONTEXT_PROMPT
-    ).value
+    """TOPIK 51, 52번 문장 완성 평가 에이전트 시스템 프롬프트 생성"""
+    from config.prompt_manager import prompt_manager
 
-    formatted_context = format_context_prompt(context_data)
+    role = prompt_manager.get_prompt(keys.EVALUATOR_ROLE_PROMPT).value
+    rules = prompt_manager.get_prompt(keys.EVALUATOR_RULES_PROMPT).value
 
-    return f"""
-    {OUTPUT_FORMAT_PROMPT}
-    {formatted_context}
-    {FEWSHOT_PROMPT}
-    """
+    rubric_json = prompt_manager.get_prompt(
+        keys.EVALUATOR_SC_CONTEXT_RUBRIC_PROMPT).value
+
+    formatted_rubric = format_context_prompt(rubric_json)
+
+    fewshot = prompt_manager.get_prompt(keys.EVALUATOR_SC_FEWSHOT_PROMPT).value
+
+    parts = [role, rules, formatted_rubric, fewshot]
+
+    built_prompt = "\n\n".join(part.strip() for part in parts if part)
+    logger.info("System prompt: \n\n" + "="*100 +
+                "\n\n" + built_prompt + "\n\n" + "="*100 + "\n\n")
+    return built_prompt
 
 
 sentence_completion_evaluator_agent = LlmAgent(
@@ -32,5 +37,7 @@ sentence_completion_evaluator_agent = LlmAgent(
     description="TOPIK 51, 52번 문장 완성 평가 에이전트",
     generate_content_config=GENERATE_CONTENT_CONFIG,
     planner=DEFAULT_PLANNER,
-    tools=[question_finder],
+    output_schema=EvaluatorSentenceCompletionOutput,
+    disallow_transfer_to_parent=True,
+    disallow_transfer_to_peers=True,
 )

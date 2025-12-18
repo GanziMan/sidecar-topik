@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { QUESTION_TYPES } from "./config/question.config";
-import { SESSION_ID, USER_ID } from "./config/shared";
+import { ACCESS_TOKEN } from "./config/shared";
 import { getSession } from "./lib/serverActions/auth";
 import { deleteAuthCookies } from "./lib/serverActions/cookies";
 import { Role } from "./types/common.types";
@@ -14,10 +14,9 @@ export async function middleware(request: NextRequest) {
   const session = await getSession();
   const isAdmin = session?.roles?.includes(Role.ADMIN);
 
-  const sessionCookie = request.cookies.get(SESSION_ID);
-  const userCookie = request.cookies.get(USER_ID);
+  const accessToken = request.cookies.get(ACCESS_TOKEN);
 
-  if (sessionCookie && userCookie && REDIRECT_PATHS.includes(pathname)) {
+  if (accessToken && REDIRECT_PATHS.includes(pathname)) {
     if (isAdmin) {
       return NextResponse.redirect(new URL(`/admin/question/2025/1/${QUESTION_TYPES[0]}`, request.url));
     } else {
@@ -25,7 +24,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  if ((!sessionCookie || !userCookie) && !REDIRECT_PATHS.includes(pathname)) {
+  if (!accessToken && !REDIRECT_PATHS.includes(pathname)) {
     const response = NextResponse.redirect(new URL("/login", request.url));
     await deleteAuthCookies();
     return response;

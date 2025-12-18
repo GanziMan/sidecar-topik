@@ -22,7 +22,7 @@ export function StructuredPromptEditor({
   const handleDescriptionChange = (sIndex: number, cIndex: number, value: string) => {
     if (readOnly) return;
     const nextState = produce(prompt, (draft) => {
-      draft.sections[sIndex].criteria[cIndex].description = value;
+      draft.sections[sIndex].rubric[cIndex].description = value;
     });
     onChange(nextState);
   };
@@ -94,11 +94,11 @@ function Sections({
       {sections.map((section, sIndex) => (
         <div key={`${section.title}-${sIndex}`} className="mb-6 break-keep">
           <h5 className="font-semibold">{section.title}</h5>
-          {section.criteria.map((criterion, cIndex) => (
-            <div key={`${criterion.score}-${cIndex}`} className="ml-4 mt-2 break-keep">
-              <label className="text-[13px] font-medium">{criterion.score}</label>
+          {section.rubric.map((rubric, cIndex) => (
+            <div key={`${rubric.score}-${cIndex}`} className="ml-4 mt-2 break-keep">
+              <label className="text-[13px] font-medium">{rubric.score}</label>
               <Textarea
-                value={criterion.description}
+                value={rubric.description}
                 onChange={(value) => onChange(sIndex, cIndex, value)}
                 disabled={isLoading || readOnly}
               />

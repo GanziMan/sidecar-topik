@@ -36,8 +36,9 @@ export function PromptEditor({ prompts, questionType }: PromptEditorProps) {
     handleRestore,
     handleCancel,
   } = usePromptEditor({ initialPrompts: prompts, questionType });
+
   const renderEditorContent = () => (
-    <div className="flex-1 overflow-auto h-full">
+    <div className="overflow-auto h-full">
       <div className={"bg-white h-full p-4"}>
         <PromptTabs prompts={activePrompts} activeTab={activeTab} onTabChange={setActiveTab} />
 
@@ -66,7 +67,7 @@ export function PromptEditor({ prompts, questionType }: PromptEditorProps) {
   const renderActionButtons = () => <ActionButtons isLoading={isLoading} onSave={handleSave} onCancel={handleCancel} />;
 
   return (
-    <div className="w-[553px] bg-white flex flex-col h-[calc(100vh-270px)] relative">
+    <div className="bg-white flex flex-col h-[calc(100vh-100px)] relative">
       {renderEditorContent()}
       {renderActionButtons()}
     </div>

@@ -6,7 +6,6 @@ import { QuestionType } from "@/types/common.types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import tw from "tailwind-styled-components";
-import useEvaluationHistory from "@/hooks/useEvaluationHistory";
 import CorrectionReview from "@/components/question/writing-review/CorrectionReview";
 import ModelReview from "@/components/question/writing-review/ModelReview";
 import EvaluationTabContent from "./EvaluationTabContent";
@@ -20,7 +19,6 @@ const REVIEW_TABS: { label: string; value: ReviewTab }[] = [
 ];
 
 interface WritingReviewProps {
-  questionId: string;
   questionType: QuestionType;
   evaluationResult: EvaluationResponseUnion;
   correctionResult: CorrectionResponse | null;
@@ -29,7 +27,6 @@ interface WritingReviewProps {
 }
 
 export default function WritingReview({
-  questionId,
   questionType,
   evaluationResult,
   correctionResult,
@@ -37,8 +34,6 @@ export default function WritingReview({
   charCount,
 }: WritingReviewProps) {
   const [activeTab, setActiveTab] = useState<ReviewTab>("evaluation");
-
-  const { evaluationHistories } = useEvaluationHistory(questionId, evaluationResult);
 
   const availableTabs = REVIEW_TABS.filter((tab) => {
     if (tab.value === "correction") {
@@ -55,8 +50,7 @@ export default function WritingReview({
   }, [correctionResult]);
 
   return (
-    <div className="flex flex-col gap-[30px] bg-white w-[553px] p-5">
-      {/* Tab Navigation */}
+    <ReviewContainer>
       <TabList role="tablist">
         {availableTabs.map(({ value, label }) => (
           <ReviewTab key={value} label={label} isActive={activeTab === value} onClick={() => setActiveTab(value)} />
@@ -67,7 +61,6 @@ export default function WritingReview({
         <EvaluationTabContent
           questionType={questionType}
           initialEvaluationResult={evaluationResult}
-          evaluationHistories={evaluationHistories}
           charCount={charCount}
         />
       )}
@@ -82,11 +75,12 @@ export default function WritingReview({
       )}
 
       {activeTab === "model" && <ModelReview questionType={questionType} evaluationResult={evaluationResult} />}
-    </div>
+    </ReviewContainer>
   );
 }
 
 const TabList = tw.div`flex gap-4.5`;
+const ReviewContainer = tw.div`flex flex-col gap-[30px] bg-white w-[553px] p-5`;
 
 // ----------------------------------------------------------------------
 // Sub Components

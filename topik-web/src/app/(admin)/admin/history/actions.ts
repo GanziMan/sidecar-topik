@@ -1,9 +1,9 @@
 "use server";
 
-import { createClient } from "@/supabase/server";
 import { QuestionType } from "@/types/common.types";
 import { Json } from "@/types/supabase";
 import { SubmissionRepository } from "@/repositories/submission.repository";
+import { UserRepository } from "@/repositories/user.repository";
 
 export interface SubmissionHistoryItem {
   id: string;
@@ -22,19 +22,12 @@ export interface SubmissionHistoryResponse {
 }
 
 export async function getSubmissionHistory(page: number = 1, limit: number = 10): Promise<SubmissionHistoryResponse> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    throw new Error("로그인이 필요합니다.");
-  }
+  const user = await UserRepository.getCurrentUserOrThrow();
 
   try {
-    // Repository 호출로 변경
     const { data: richSubmissions, count } = await SubmissionRepository.findHistoryByUserId(user.id, page, limit);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const tableData = richSubmissions.map(({ id, created_at, user_id, questions, submission_results }: any) => {
       const evaluation = submission_results?.evaluation;
       const snapshot = submission_results?.prompt_snapshot;
@@ -44,11 +37,9 @@ export async function getSubmissionHistory(page: number = 1, limit: number = 10)
       if (evaluation && typeof evaluation === "object" && "total_score" in evaluation) {
         score = (evaluation.total_score as number) || 0;
       } else if (evaluation && typeof evaluation === "object" && "score" in evaluation) {
-        // @ts-ignore
         score = evaluation.score?.total_score || evaluation.total_score || evaluation.score || 0;
       }
 
-      // @ts-ignore
       const questionNumber = questions?.question_number;
 
       return {

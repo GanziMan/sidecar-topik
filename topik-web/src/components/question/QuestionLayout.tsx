@@ -15,6 +15,7 @@ import useAnswerForm from "@/hooks/useAnswerForm";
 import useCorrection from "@/hooks/useCorrection";
 import WritingReview from "../admin/WritingReview";
 import { PromptEditor } from "../admin/PromptEditor";
+import SampleSelector from "@/components/common/SampleSelector";
 
 interface QuestionLayoutProps {
   questionContent: GetQuestionContentResponse;
@@ -27,6 +28,7 @@ export default function QuestionLayout({ questionContent, prompts }: QuestionLay
     type: answerType,
     onChange: handleAnswerChange,
     data: answer,
+    setValue: handleSetAnswer,
     reset: handleResetAnswer,
   } = useAnswerForm(type);
 
@@ -53,7 +55,7 @@ export default function QuestionLayout({ questionContent, prompts }: QuestionLay
   const { number, score } = meta;
 
   return (
-    <div className="flex gap-7.5 justify-center">
+    <div className="flex gap-7.5 justify-center items-start">
       <LoadingOverlay
         isLoading={isLoading || isCorrectionLoading}
         label={isCorrectionLoading ? "첨삭 중..." : "채점 중..."}
@@ -64,6 +66,24 @@ export default function QuestionLayout({ questionContent, prompts }: QuestionLay
 
             {/* 문제 내용 */}
             <QuestionContext content={context} year={Number(year)} round={Number(round)} questionNumber={number} />
+
+            {/* 샘플 선택기 */}
+            {!evaluationResult && (
+              <SampleSelector
+                year={Number(year)}
+                round={Number(round)}
+                questionType={type}
+                onSelect={(sample) => {
+                  if (answerType === "sentence" && typeof sample.content !== "string") {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    (handleSetAnswer as any)(sample.content);
+                  } else if (answerType === "essay" && typeof sample.content === "string") {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    (handleSetAnswer as any)(sample.content);
+                  }
+                }}
+              />
+            )}
 
             {/* 답안 입력 */}
             <AnswerInput
@@ -91,7 +111,6 @@ export default function QuestionLayout({ questionContent, prompts }: QuestionLay
               <div className="text-red-500">{evaluationResult.error as string}</div>
             ) : (
               <WritingReview
-                questionId={questionContent.id as string}
                 questionType={type}
                 evaluationResult={evaluationResult!}
                 correctionResult={correctionResult}
@@ -102,7 +121,11 @@ export default function QuestionLayout({ questionContent, prompts }: QuestionLay
         </div>
       </LoadingOverlay>
 
-      {prompts && <PromptEditor prompts={prompts} questionType={type} />}
+      {prompts && (
+        <div className="sticky top-[80px] h-fit w-full max-w-[553px]">
+          <PromptEditor prompts={prompts} questionType={type} />
+        </div>
+      )}
     </div>
   );
 }

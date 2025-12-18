@@ -1,33 +1,47 @@
-import { useState, useEffect } from "react";
-import { UserSubmission, EvaluationResponseUnion } from "@/types/question.types";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { UserSubmission } from "@/types/question.types";
 import { NextApiClient } from "@/lib/ky";
 
-export default function useEvaluationHistory(questionId: string, evaluationResult: EvaluationResponseUnion) {
-  const [evaluationHistories, setEvaluationHistories] = useState<UserSubmission[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+export default function useEvaluationHistory(questionId: string) {
+  const { data, fetchNextPage, hasNextPage, isFetching, isFetchingNextPage, status, error } =
+    useEvaluationHistoryInfiniteQuery(questionId);
 
-  useEffect(() => {
-    const fetchEvaluationHistory = async () => {
-      if (!questionId) return;
-      setIsLoading(true);
-      setError(null);
+  const evaluationHistories = data?.pages?.flat() || [];
 
-      const response = await NextApiClient.get<UserSubmission[]>(`api/submissions/question/${questionId}`);
+  return {
+    evaluationHistories,
+    isLoading: status === "pending",
+    isError: status === "error",
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+  };
+}
 
-      if (response.success) {
-        setEvaluationHistories(response.data ?? []);
-      } else {
-        const errorMessage = response.error.message || "Failed to fetch history";
-        setError(new Error(errorMessage));
-        console.error(errorMessage);
+// TODO: react-query hook 공통화 필요
+const EVALUATION_HISTORY_KEY = "evaluation-history";
+
+function useEvaluationHistoryInfiniteQuery(questionId: string) {
+  return useInfiniteQuery({
+    queryKey: [EVALUATION_HISTORY_KEY, questionId],
+    queryFn: async ({ pageParam = 1 }) => {
+      const response = await NextApiClient.get<UserSubmission[]>(
+        `api/submissions/question/${questionId}?page=${pageParam}&limit=10`
+      );
+
+      if (!response.success) {
+        throw new Error(response.error?.message || "Failed to fetch history");
       }
 
-      setIsLoading(false);
-    };
-
-    fetchEvaluationHistory();
-  }, [questionId, evaluationResult]);
-
-  return { evaluationHistories, isLoading, error };
+      return response.data || [];
+    },
+    getNextPageParam: (lastPage, allPages) => {
+      // 10개 미만이면 더 이상 페이지가 없다고 판단
+      return lastPage?.length === 10 ? allPages.length + 1 : undefined;
+    },
+    initialPageParam: 1,
+    enabled: !!questionId, // questionId가 있을 때만 실행
+  });
 }

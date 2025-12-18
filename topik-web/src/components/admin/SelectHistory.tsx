@@ -1,4 +1,5 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import useIntersectionObserver from "@/hooks/useIntersectionObserver";
 import { ReactNode } from "react";
 
 interface SelectHistoryProps<T> {
@@ -14,6 +15,8 @@ interface SelectHistoryProps<T> {
   getItemValue: (item: T) => string;
   emptyMessage?: string;
   prependItems?: ReactNode;
+  onReachEnd?: () => void;
+  hasMore?: boolean;
 }
 
 export default function SelectHistory<T>({
@@ -29,14 +32,23 @@ export default function SelectHistory<T>({
   getItemValue,
   emptyMessage = "기록 없음",
   prependItems,
+  onReachEnd,
+  hasMore = false,
 }: SelectHistoryProps<T>) {
+  const setObserverTarget = useIntersectionObserver({
+    onIntersect: () => {
+      if (hasMore && onReachEnd) onReachEnd();
+    },
+    enabled: hasMore,
+  });
+
   return (
     <Select value={value} onOpenChange={onOpenChange} onValueChange={onValueChange}>
       <SelectTrigger className={triggerClassName}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent className={contentClassName}>
-        {isLoading ? (
+        {isLoading && items.length === 0 ? (
           <div className="text-center text-sm text-gray-500 py-2">로딩 중...</div>
         ) : (
           <>
@@ -49,6 +61,15 @@ export default function SelectHistory<T>({
                   {renderItem(item)}
                 </SelectItem>
               ))
+            )}
+            {/* Observer Target */}
+            {hasMore && (
+              <div
+                ref={setObserverTarget}
+                className="h-8 w-full flex justify-center items-center py-2 text-xs text-gray-400"
+              >
+                {isLoading ? "로딩 중..." : "더 불러오기"}
+              </div>
             )}
           </>
         )}

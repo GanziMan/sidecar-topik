@@ -1,11 +1,11 @@
-export interface Criterion {
+export interface Rubric {
   score: string;
   description: string;
 }
 
 export interface PromptSection {
   title: string;
-  criteria: Criterion[];
+  rubric: Rubric[];
 }
 
 export interface StructuredPrompt {

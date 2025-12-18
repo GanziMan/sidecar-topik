@@ -1,9 +1,4 @@
-import {
-  EvaluationResponseUnion,
-  SentenceCompletionResponse,
-  UserSubmission,
-  WritingResponse,
-} from "@/types/question.types";
+import { EvaluationResponseUnion, SentenceCompletionResponse, WritingResponse } from "@/types/question.types";
 import { QuestionType } from "@/types/common.types";
 import FeedbackCard from "./FeedbackCard";
 import ReviewScoreCard from "./ReviewScoreCard";
@@ -14,15 +9,9 @@ interface EvaluationReviewProps {
   questionType: QuestionType;
   evaluationResult: Json | EvaluationResponseUnion;
   charCount?: number;
-  historyAnswer?: UserSubmission | null;
 }
 
-export default function EvaluationReview({
-  questionType,
-  evaluationResult,
-  charCount,
-  historyAnswer,
-}: EvaluationReviewProps) {
+export default function EvaluationReview({ questionType, evaluationResult, charCount }: EvaluationReviewProps) {
   if (!evaluationResult) {
     return null;
   }
@@ -34,7 +23,6 @@ export default function EvaluationReview({
         <SentenceCompletionView
           questionType={questionType}
           evaluationResult={evaluationResult as SentenceCompletionResponse}
-          historyAnswer={historyAnswer}
         />
       );
     // Q53, Q54: 글쓰기 채점
@@ -45,7 +33,6 @@ export default function EvaluationReview({
           questionType={questionType}
           evaluationResult={evaluationResult as WritingResponse}
           charCount={charCount || 0}
-          historyAnswer={historyAnswer}
         />
       );
     default:
@@ -66,10 +53,9 @@ const getCharCountEvaluation = (questionType: QuestionType, charCount: number) =
 interface SentenceCompletionViewProps {
   questionType: QuestionType;
   evaluationResult: SentenceCompletionResponse;
-  historyAnswer?: UserSubmission | null;
 }
 
-function SentenceCompletionView({ questionType, evaluationResult, historyAnswer }: SentenceCompletionViewProps) {
+function SentenceCompletionView({ questionType, evaluationResult }: SentenceCompletionViewProps) {
   const { total_score, scores, strengths, weaknesses, improvement_suggestions } = evaluationResult;
   const { totalScore, scoreInfo } = QUESTION_CONFIG[questionType];
   const feedbacks = [
@@ -82,12 +68,6 @@ function SentenceCompletionView({ questionType, evaluationResult, historyAnswer 
   }
   return (
     <>
-      {historyAnswer?.attempt_no && (
-        <FeedbackCard
-          title={`${historyAnswer?.attempt_no}번째 채점 답안`}
-          contents={`${Object.values(historyAnswer?.user_answer || {}).join("\n")}`}
-        />
-      )}
       <ReviewScoreCard title="총점" score={total_score} totalScore={totalScore} />
       <div className="flex gap-5">
         <ReviewScoreCard title="ㄱ 빈칸" score={scores.answer1} totalScore={scoreInfo.answer1} />
@@ -104,7 +84,6 @@ interface EssayViewProps {
   questionType: QuestionType;
   evaluationResult: WritingResponse;
   charCount: number;
-  historyAnswer?: UserSubmission | null;
 }
 
 function EssayView({ questionType, evaluationResult, charCount }: EssayViewProps) {

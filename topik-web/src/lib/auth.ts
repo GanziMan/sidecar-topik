@@ -71,7 +71,9 @@ export const {
 
     async jwt({ token, user }) {
       if (user) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         token.accessToken = (user as any).accessToken;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         token.roles = (user as any).roles;
       }
       return token;

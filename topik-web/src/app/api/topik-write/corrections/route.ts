@@ -20,14 +20,15 @@ export async function POST(request: Request): Promise<ApiResponse<CorrectionResp
   const { year, round, questionNumber, answer, evaluationResult } = parsedData;
 
   let agentResponseText = "";
-  const response = await ServiceApiClient.post<Record<string, unknown>, { result: string }>("writing/corrector", {
+  const response = await ServiceApiClient.post<Record<string, unknown>, string>("writing/corrector", {
     exam_year: year,
     exam_round: round,
     question_number: questionNumber,
     answer,
     evaluation_result: evaluationResult,
   });
-  if (response.success) agentResponseText = response.data?.result!;
+  if (response.success) agentResponseText = response.data!;
+  else return createErrorResponse(response.error.message, response.error.code, 500);
 
   if (agentResponseText) {
     const textFromAgent = agentResponseText;

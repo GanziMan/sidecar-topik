@@ -68,6 +68,7 @@ export interface QuestionContent {
     }[];
   };
   instruction: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   model_answer?: any;
 }
 

@@ -2,14 +2,13 @@ import { GetQuestionContentResponse } from "@/types/question.types";
 import { NextRequest } from "next/server";
 import { createResponse, createErrorResponse } from "@/lib/api-utils";
 import { ErrorCode } from "@/config/error-codes.config";
-import { QuestionParams } from "@/types/common.types";
 import { ApiResponse } from "@/types/common.types";
 import { QuestionRepository } from "@/repositories/question.repository";
 
 // 문제 조회 api
 export async function GET(
   _req: NextRequest,
-  { params }: { params: Promise<QuestionParams> }
+  { params }: { params: Promise<{ year: string; round: string; type: string }> }
 ): Promise<ApiResponse<GetQuestionContentResponse>> {
   const { year, round, type } = await params;
 

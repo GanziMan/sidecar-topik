@@ -17,6 +17,7 @@ const THINKING_MODES = [
 interface ThinkingBudgetState {
   mode: ThinkingBudgetMode;
   setMode: (mode: ThinkingBudgetMode) => void;
+  setBudgetFromValue: (budget: number) => void;
   getBudget: () => { budget: number; mode: string };
 }
 
@@ -25,6 +26,10 @@ export const useThinkingBudgetStore = create<ThinkingBudgetState>()(
     (set, get) => ({
       mode: "disabled",
       setMode: (mode) => set({ mode }),
+      setBudgetFromValue: (budget) => {
+        const mode = budget === -1 ? "dynamic" : "disabled";
+        set({ mode });
+      },
       getBudget: () => {
         const { mode } = get();
         const modeLabel = THINKING_MODES.find((m) => m.value === mode)?.label;

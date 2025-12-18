@@ -4,6 +4,8 @@ import "./globals.css";
 import LayoutClient from "./layoutClient";
 import AuthProvider from "@/providers/AuthProvider";
 import { getQuestionOptions } from "@/lib/serverActions/questions";
+import { getThinkingBudget } from "@/lib/serverActions/agent";
+import QueryProvider from "@/providers/QueryProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,13 +28,20 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const availableQuestions = await getQuestionOptions();
+  const budgetRes = await getThinkingBudget();
+
+  const initialBudget = budgetRes.success ? budgetRes?.data : 0;
 
   return (
     <html lang="ko">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <AuthProvider>
-          <LayoutClient availableQuestions={availableQuestions}>{children}</LayoutClient>
-        </AuthProvider>
+        <QueryProvider>
+          <AuthProvider>
+            <LayoutClient availableQuestions={availableQuestions} initialBudget={initialBudget!}>
+              {children}
+            </LayoutClient>
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );

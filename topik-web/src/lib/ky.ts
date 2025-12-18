@@ -2,6 +2,7 @@ import ky, { AfterResponseHook, HTTPError, Options } from "ky";
 import { SERVICE_BASE_URL, API_BASE_URL } from "@/config/shared";
 import { ActionResponse, ErrorResponse } from "@/types/common.types";
 import { mapToErrorCode } from "@/config/error-codes.config";
+import { logError } from "@/lib/logger"; // 로거 임포트
 
 type ApiClientType = "service" | "next";
 
@@ -42,6 +43,10 @@ const createApiClient = (type: ApiClientType) => {
       const httpError = error as HTTPError;
       const status = httpError.response?.status ?? 500;
       const message = httpError.message || "Request Failed";
+      
+      // 에러 로그 기록
+      const url = httpError.request?.url || "Unknown URL";
+      logError(`API Error [${status}] at ${url}: ${message}`);
 
       return {
         success: false,

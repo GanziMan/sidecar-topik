@@ -17,6 +17,7 @@ export interface CreateSubmissionResultParams {
 }
 
 export interface SubmissionHistoryResult {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any[];
   count: number | null;
 }
@@ -72,8 +73,10 @@ export const SubmissionRepository = {
     if (error) throw error;
   },
 
-  async findAllByUserIdAndQuestionId(userId: string, questionId: string) {
+  async findAllByUserIdAndQuestionId(userId: string, questionId: string, page: number = 1, limit: number = 10) {
     const supabase = await createClient();
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
 
     const { data, error } = await supabase
       .from(DB_TABLES.USER_SUBMISSIONS)
@@ -87,13 +90,15 @@ export const SubmissionRepository = {
         id,
         created_at,
         evaluation,
-        correction
+        correction,
+        prompt_snapshot
       )
     `
       )
       .eq(DB_COLUMNS.USER_SUBMISSIONS.USER_ID, userId)
       .eq(DB_COLUMNS.USER_SUBMISSIONS.QUESTION_ID, questionId)
-      .order(DB_COLUMNS.USER_SUBMISSIONS.ATTEMPT_NO, { ascending: false });
+      .order(DB_COLUMNS.USER_SUBMISSIONS.ATTEMPT_NO, { ascending: false })
+      .range(from, to);
 
     if (error) throw error;
     return data;

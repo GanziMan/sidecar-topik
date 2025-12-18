@@ -7,12 +7,15 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+def get_thinking_budget() -> int:
+    """ 현재 생각 비용을 반환합니다. """
+    return DEFAULT_PLANNER.thinking_config.thinking_budget
+
+
 def set_thinking_budget(new_budget: int) -> None:
+    """ 생각 비용을 설정합니다. """
     DEFAULT_PLANNER.thinking_config = types.ThinkingConfig(
         thinking_budget=new_budget)
-    logger.info(
-        f"Successfully set thinking_budget to {DEFAULT_PLANNER.thinking_config.thinking_budget}"
-    )
 
 
 DEFAULT_PLANNER = BuiltInPlanner(

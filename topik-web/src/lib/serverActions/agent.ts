@@ -4,11 +4,24 @@ import { ActionResponse } from "@/types/common.types";
 import { StructuredPrompt } from "@/types/prompt.types";
 import { createActionError, createActionResponse } from "../api-utils";
 import { ErrorCode } from "@/config/error-codes.config";
-import { createClient } from "@/supabase/server";
+
 import { Json } from "@/types/supabase";
 import { PromptRepository } from "@/repositories/prompt.repository";
+import { UserRepository } from "@/repositories/user.repository";
 
-// AI 추론 업데이트
+// AI 생각 비용 가져오기
+export async function getThinkingBudget() {
+  try {
+    const response = await ServiceApiClient.get<number>("get-thinking-budget");
+
+    return createActionResponse(response.success ? response.data : 0);
+  } catch (error) {
+    console.error("Thinking budget 가져오기 실패", error);
+    return createActionError("Thinking budget 가져오기 실패", ErrorCode.INTERNAL_SERVER_ERROR);
+  }
+}
+
+// AI 생각 비용 업데이트
 export async function updateThinkingBudget(newBudget: number) {
   try {
     await ServiceApiClient.post("update-thinking-budget", {
@@ -31,11 +44,7 @@ export async function getPrompts(): Promise<ActionResponse<Record<string, Prompt
 export async function updatePrompt(promptKey: string, content: PromptContent): Promise<ActionResponse> {
   try {
     const currentPrompt = await PromptRepository.findByKey(promptKey);
-    const supabase = await createClient();
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await UserRepository.getCurrentUserOrThrow();
 
     if (currentPrompt) {
       const nextVersion = currentPrompt.version + 1;

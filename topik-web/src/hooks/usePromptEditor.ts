@@ -2,8 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
 import { QuestionType } from "@/types/common.types";
 import { PromptContent, updatePrompt } from "@/lib/serverActions/agent";
-import { PROMPT_KEYS } from "@/config/prompt-keys.config";
-import { getAgentTypeForQuestion, isStructuredPrompt } from "@/lib/prompt-utils";
+import { getRelevantPromptKeys, isStructuredPrompt } from "@/lib/prompt-utils";
 
 interface UsePromptEditorProps {
   initialPrompts: Record<string, PromptContent>;
@@ -21,12 +20,8 @@ export default function usePromptEditor({ initialPrompts, questionType }: UsePro
   useEffect(() => {
     if (Object.keys(initialPrompts).length === 0) return;
 
-    const agentType = getAgentTypeForQuestion(questionType);
-    const allPromptKeys = Object.values(PROMPT_KEYS);
-
-    // Filter keys related to the agent type
-    const relevantKeys = allPromptKeys.filter((key) => key.includes(agentType));
-
+    // Use centralized logic to get relevant keys
+    const relevantKeys = getRelevantPromptKeys(questionType);
     const filtered = relevantKeys.reduce((acc, key) => {
       if (initialPrompts[key]) {
         acc[key] = initialPrompts[key];
@@ -95,7 +90,6 @@ export default function usePromptEditor({ initialPrompts, questionType }: UsePro
 
   const handleRestore = useCallback((key: string, content: PromptContent) => {
     setEditablePrompts((prev) => ({ ...prev, [key]: content }));
-    toast.success("프롬프트가 복구되었습니다.");
   }, []);
 
   const handleCancel = useCallback(() => {

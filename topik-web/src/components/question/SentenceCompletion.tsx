@@ -2,7 +2,6 @@
 
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 import { SentenceCompletionAnswer } from "@/types/question.types";
 
 const answerFields = [
@@ -49,7 +48,6 @@ function SentenceCompletionInput({ symbol, value, onChange, className, disabled 
       <div className="w-[33px] h-[33px] rounded-full absolute top-[15px] left-5 border-[#B3B3B3] border-[0.5px] flex items-center justify-center">
         {symbol}
       </div>
-      <Image src="/icons/icon-upload.svg" alt="upload" width={24} height={24} className="absolute top-5 right-5" />
 
       <Input
         type="text"
