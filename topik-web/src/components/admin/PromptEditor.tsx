@@ -120,6 +120,8 @@ function PromptEditorContent({
   onRestore,
 }: PromptEditorContentProps) {
   const promptLabel = PROMPT_KEY_LABELS[promptKey as keyof typeof PROMPT_KEY_LABELS] || promptKey;
+  const promptType = promptKey.toLowerCase().includes("corrector") ? "corrector" : "evaluator";
+
   return (
     <div className={"space-y-4"}>
       <PromptHistory
@@ -130,7 +132,12 @@ function PromptEditorContent({
       />
 
       {isStructuredPrompt(content) && (
-        <StructuredPromptEditor prompt={content as StructuredPrompt} onChange={onPromptChange} isLoading={isLoading} />
+        <StructuredPromptEditor
+          prompt={content as StructuredPrompt}
+          onChange={onPromptChange}
+          isLoading={isLoading}
+          promptType={promptType}
+        />
       )}
     </div>
   );

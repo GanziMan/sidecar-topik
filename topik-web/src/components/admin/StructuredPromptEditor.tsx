@@ -12,6 +12,7 @@ interface StructuredPromptEditorProps {
   onChange?: (newPrompt: StructuredPrompt) => void;
   isLoading?: boolean;
   readOnly?: boolean;
+  promptType?: "evaluator" | "corrector"; // 타입 추가
 }
 
 export function StructuredPromptEditor({
@@ -19,6 +20,7 @@ export function StructuredPromptEditor({
   onChange = () => {},
   isLoading = false,
   readOnly = false,
+  promptType = "evaluator", // 기본값
 }: StructuredPromptEditorProps) {
   const handleDescriptionChange = (sIndex: number, cIndex: number, value: string) => {
     if (readOnly) return;
@@ -63,6 +65,7 @@ export function StructuredPromptEditor({
         onChange={handleDescriptionChange}
         isLoading={isLoading}
         readOnly={readOnly}
+        promptType={promptType}
       />
 
       <Guidelines
@@ -80,12 +83,15 @@ export function StructuredPromptEditor({
 function Sections({
   sections,
   onChange,
+  isLoading,
   readOnly,
+  promptType,
 }: {
   sections: StructuredPrompt["sections"];
   onChange: (sIndex: number, cIndex: number, value: string) => void;
   isLoading: boolean;
   readOnly: boolean;
+  promptType: "evaluator" | "corrector";
 }) {
   if (!sections) return null;
 
@@ -107,6 +113,7 @@ function Sections({
                   <RubricDescriptionEditor
                     value={rubric.description}
                     onChange={(value) => onChange(sIndex, cIndex, value)}
+                    type={promptType}
                   />
                 )}
               </div>

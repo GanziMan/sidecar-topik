@@ -41,7 +41,7 @@ export function PromptHistory({ placeholder, promptKey, onRestore, className }: 
         items={history}
         placeholder={placeholder}
         triggerClassName={`w-[150px] text-sm focus:ring-0 ${className}`}
-        contentClassName="border p-0.5 hover:bg-white w-[150px]"
+        contentClassName="border p-0.5 hover:bg-white w-[150px] max-h-[300px] overflow-y-auto"
         onValueChange={handleValueChange}
         getItemValue={(item) => item.id}
         renderItem={(item) => (

@@ -8,13 +8,30 @@ interface RubricDescriptionEditorProps {
   value: string;
   onChange: (newValue: string) => void;
   className?: string;
+  type?: "evaluator" | "corrector"; // 타입 추가
 }
 
-export function RubricDescriptionEditor({ value, onChange, className }: RubricDescriptionEditorProps) {
+export function RubricDescriptionEditor({
+  value,
+  onChange,
+  className,
+  type = "evaluator",
+}: RubricDescriptionEditorProps) {
   // 내부 상태 관리 (불필요한 리렌더링 및 커서 튐 방지)
   const [intro, setIntro] = useState("");
   const [items, setItems] = useState<string[]>([]);
   const isInternalChange = useRef(false);
+
+  // UI 텍스트 설정
+  const labels = {
+    intro: type === "evaluator" ? "기본 평가 기준 (개요)" : "첨삭 가이드 개요",
+    items: type === "evaluator" ? "세부 감점/평가 항목 (자동 번호 매김)" : "세부 수정 지침 (자동 번호 매김)",
+    introPlaceholder:
+      type === "evaluator"
+        ? "예: 기본 점수에서 감점 방식으로 평가함."
+        : "예: 학생의 의도를 해치지 않는 범위 내에서 수정함.",
+    itemPlaceholder: type === "evaluator" ? "세부 평가 기준 입력" : "구체적인 첨삭 방법 입력",
+  };
 
   // 1. [Load] 초기값 파싱
   useEffect(() => {
@@ -98,13 +115,13 @@ export function RubricDescriptionEditor({ value, onChange, className }: RubricDe
       {/* 1. 개요 설명 (Intro) */}
       <div className="space-y-1.5">
         <label className="text-xs font-semibold text-slate-500 flex items-center gap-1">
-          <AlertCircle size={12} /> 기본 평가 기준 (개요)
+          <AlertCircle size={12} /> {labels.intro}
         </label>
         <Textarea
           value={intro}
           onChange={handleIntroChange}
-          placeholder="예: 기본 점수에서 감점 방식으로 평가함."
-          className="bg-white min-h-10 text-xs! p-1.5 resize-none focus-visible:ring-1"
+          placeholder={labels.introPlaceholder}
+          className="bg-white min-h-10 text-xs! py-0.5 px-1.5 resize-none focus-visible:ring-1"
           rows={intro.split("\n").length > 1 ? 3 : 1}
         />
       </div>
@@ -112,7 +129,7 @@ export function RubricDescriptionEditor({ value, onChange, className }: RubricDe
       {/* 2. 세부 항목 리스트 (Items) */}
       <div className="space-y-2 pt-2 border-t border-slate-200/60">
         <label className="text-xs font-semibold text-slate-500 flex items-center gap-1 mb-2">
-          <List size={12} /> 세부 감점/평가 항목 (자동 번호 매김)
+          <List size={12} /> {labels.items}
         </label>
 
         <div className="space-y-2">
@@ -124,7 +141,7 @@ export function RubricDescriptionEditor({ value, onChange, className }: RubricDe
               <Textarea
                 value={item}
                 onChange={(e) => handleItemChange(idx, e.target.value)}
-                placeholder="세부 평가 기준 입력"
+                placeholder={labels.itemPlaceholder}
                 className="bg-white min-h-10 text-[10px]! p-1 resize-y focus-visible:ring-1 flex-1"
                 rows={1}
               />

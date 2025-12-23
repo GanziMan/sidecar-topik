@@ -1,44 +1,19 @@
 {
   "sections": [
     {
-      "title": "어휘/맞춤법 교정",
+      "title": "필수 교정 항목 (Core Correction)",
       "rubric": [
         {
-          "score": "맞춤법 오류",
-          "description": "철자, 띄어쓰기, 문장 부호 교정"
+          "score": "사실 관계 확인",
+          "description": "도표/그래프의 수치나 정보 왜곡 시 수정 (가장 중요)"
         },
         {
-          "score": "부적절한 어휘",
-          "description": "문맥에 맞지 않는 어휘를 적절한 어휘로 교체"
-        },
-        {
-          "score": "격식성 위반",
-          "description": "구어체 표현을 문어체로 수정"
-        },
-        {
-          "score": "어휘 선택",
-          "description": "더 정확하고 적절한 어휘로 교체 (수준 향상)"
-        }
-      ]
-    },
-    {
-      "title": "문장 교정",
-      "rubric": [
-        {
-          "score": "문법 오류",
-          "description": "조사, 어미, 활용 등의 문법적 오류 수정"
-        },
-        {
-          "score": "문장 구조",
-          "description": "어색한 문장 구조를 자연스럽게 개선"
-        },
-        {
-          "score": "문체 통일",
-          "description": "격식체 일관성 확보 ('-다' 체 통일)"
+          "score": "문체/격식성",
+          "description": "구어체/해요체를 설명문에 맞는 '하라체(-다)'로 통일"
         },
         {
           "score": "문장 연결",
-          "description": "접속 표현 개선으로 논리적 흐름 강화"
+          "description": "단순 나열을 피하고 적절한 접속사로 흐름 연결"
         }
       ]
     }
