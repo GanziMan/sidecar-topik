@@ -20,6 +20,9 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # 애플리케이션 코드 복사
 COPY . .
 
+# 로그 폴더 생성
+RUN mkdir -p logs
+
 # 포트 설정
 ENV PORT=3001
 
