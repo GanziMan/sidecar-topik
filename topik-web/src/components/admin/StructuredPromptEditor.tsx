@@ -83,7 +83,6 @@ export function StructuredPromptEditor({
 function Sections({
   sections,
   onChange,
-  isLoading,
   readOnly,
   promptType,
 }: {

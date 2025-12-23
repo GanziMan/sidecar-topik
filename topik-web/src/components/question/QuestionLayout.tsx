@@ -7,7 +7,7 @@ import { useParams } from "next/navigation";
 import { PromptContent } from "@/lib/serverActions/agent";
 import tw from "tailwind-styled-components";
 import QuestionContext from "./QuestionContext";
-import AnswerInput from "./AnswerInput";
+
 import { cn } from "@/lib/utils";
 // hooks
 import useSolver from "@/hooks/useSolver";
@@ -16,6 +16,7 @@ import useCorrection from "@/hooks/useCorrection";
 import WritingReview from "../admin/WritingReview";
 import { PromptEditor } from "../admin/PromptEditor";
 import SampleSelector from "@/components/common/SampleSelector";
+import AnswerInput from "./AnswerInput";
 
 interface QuestionLayoutProps {
   questionContent: GetQuestionContentResponse;
@@ -56,18 +57,19 @@ export default function QuestionLayout({ questionContent, prompts }: QuestionLay
 
   return (
     <div className="flex gap-7.5 justify-center items-start">
-      <LoadingOverlay
-        isLoading={isLoading || isCorrectionLoading}
-        label={isCorrectionLoading ? "첨삭 중..." : "채점 중..."}
-      >
-        <div className={cn("flex gap-7.5", prompts && "flex-col")}>
-          <QuestionFormContainer>
-            <QuestionTitle>{`${number}. ${instruction} (${score}점)`}</QuestionTitle>
+      <div className={cn("flex gap-7.5", prompts && "flex-col")}>
+        <QuestionFormContainer>
+          <QuestionTitle>{`${number}. ${instruction} (${score}점)`}</QuestionTitle>
 
-            {/* 문제 내용 */}
-            <QuestionContext content={context} year={Number(year)} round={Number(round)} questionNumber={number} />
+          {/* 문제 내용 */}
+          <QuestionContext content={context} year={Number(year)} round={Number(round)} questionNumber={number} />
 
+          <LoadingOverlay
+            isLoading={isLoading || isCorrectionLoading}
+            label={isCorrectionLoading ? "첨삭 중..." : "채점 중..."}
+          >
             {/* 샘플 선택기 */}
+
             {!evaluationResult && (
               <SampleSelector
                 year={Number(year)}
@@ -103,24 +105,24 @@ export default function QuestionLayout({ questionContent, prompts }: QuestionLay
                 handleEvaluation();
               }}
             />
-          </QuestionFormContainer>
+          </LoadingOverlay>
+        </QuestionFormContainer>
 
-          {/* 채점 결과 */}
-          {evaluationResult &&
-            ("error" in evaluationResult ? (
-              <div className="text-red-500">{evaluationResult.error as string}</div>
-            ) : (
-              <WritingReview
-                questionType={type}
-                evaluationResult={evaluationResult!}
-                correctionResult={correctionResult}
-                isCorrectionLoading={isCorrectionLoading}
-                charCount={Array.from(answerType === "essay" ? answer : "").length}
-                answer={answerType === "essay" ? answer : ""}
-              />
-            ))}
-        </div>
-      </LoadingOverlay>
+        {/* 채점 결과 */}
+        {evaluationResult &&
+          ("error" in evaluationResult ? (
+            <div className="text-red-500">{evaluationResult.error as string}</div>
+          ) : (
+            <WritingReview
+              questionType={type}
+              evaluationResult={evaluationResult!}
+              correctionResult={correctionResult}
+              isCorrectionLoading={isCorrectionLoading}
+              charCount={Array.from(answerType === "essay" ? answer : "").length}
+              answer={answerType === "essay" ? answer : ""}
+            />
+          ))}
+      </div>
 
       {prompts && (
         <div className="sticky top-[80px] h-fit w-full max-w-[553px]">
