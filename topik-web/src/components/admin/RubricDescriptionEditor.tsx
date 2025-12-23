@@ -125,7 +125,7 @@ export function RubricDescriptionEditor({ value, onChange, className }: RubricDe
                 value={item}
                 onChange={(e) => handleItemChange(idx, e.target.value)}
                 placeholder="세부 평가 기준 입력"
-                className="bg-white min-h-10 text-xs! p-1.5 resize-y focus-visible:ring-1 flex-1"
+                className="bg-white min-h-10 text-[10px]! p-1 resize-y focus-visible:ring-1 flex-1"
                 rows={1}
               />
               <Button
