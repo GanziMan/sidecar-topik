@@ -5,6 +5,7 @@ import { produce } from "immer";
 import { Button } from "@/components/ui/button";
 import { MinusIcon, PlusIcon } from "lucide-react";
 import { StructuredPrompt } from "@/types/prompt.types";
+import { RubricDescriptionEditor } from "@/components/admin/RubricDescriptionEditor";
 
 interface StructuredPromptEditorProps {
   prompt: StructuredPrompt;
@@ -79,7 +80,6 @@ export function StructuredPromptEditor({
 function Sections({
   sections,
   onChange,
-  isLoading,
   readOnly,
 }: {
   sections: StructuredPrompt["sections"];
@@ -97,11 +97,19 @@ function Sections({
           {section.rubric.map((rubric, cIndex) => (
             <div key={`${rubric.score}-${cIndex}`} className="ml-4 mt-2 break-keep">
               <label className="text-[13px] font-medium">{rubric.score}</label>
-              <Textarea
-                value={rubric.description}
-                onChange={(value) => onChange(sIndex, cIndex, value)}
-                disabled={isLoading || readOnly}
-              />
+              {/* 기존 Textarea 대신 RubricDescriptionEditor 사용 */}
+              <div className="mt-1">
+                {readOnly ? (
+                  <pre className="whitespace-pre-wrap text-sm text-gray-700 p-2 bg-gray-50 rounded border">
+                    {rubric.description}
+                  </pre>
+                ) : (
+                  <RubricDescriptionEditor
+                    value={rubric.description}
+                    onChange={(value) => onChange(sIndex, cIndex, value)}
+                  />
+                )}
+              </div>
             </div>
           ))}
         </div>
