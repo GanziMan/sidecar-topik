@@ -2,12 +2,20 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# 시스템 의존성 설치
-RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+# 시스템 의존성 설치 (빌드 도구 포함)
+# google-adk 등 일부 패키지는 설치 시 gcc, g++ 등이 필요할 수 있습니다.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    gcc \
+    g++ \
+    make \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # requirements.txt 복사 및 의존성 설치
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 # 애플리케이션 코드 복사
 COPY . .
