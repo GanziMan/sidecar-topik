@@ -1,15 +1,26 @@
-[시험 정보]
-exam_year: {exam_year}
-exam_round: {exam_round}
-question_number: {question_number}
-
 {question}
 
-[학생 답안]
-{answer}
+{rubric}
 
-[참고 정보 (채점 결과 등)]
+[교정 목표 및 분량 제약 조건]
+{char_count}
+(주의: 위 조건은 루브릭 점수와 직결되는 최우선 지시사항입니다.)
+
+[학생 답안 본문]
+
+```text
+{answer}
+```
+
+[참고 정보 (이전 채점 결과)]
 {reference_info}
 
 [점수 향상 가이드라인]
 {score_guideline}
+
+---
+
+[최종 지시]
+위의 모든 정보를 바탕으로 첨삭을 진행하십시오.
+반드시 [실행 우선순위]에 따라 '글자수'를 최우선으로 맞춘 뒤, 채점 기준 (Rubric) 감점 요인을 제거하십시오.
+모든 답변은 지정된 JSON 형식으로 출력해야 합니다.

@@ -116,6 +116,7 @@ export default function QuestionLayout({ questionContent, prompts }: QuestionLay
                 correctionResult={correctionResult}
                 isCorrectionLoading={isCorrectionLoading}
                 charCount={Array.from(answerType === "essay" ? answer : "").length}
+                answer={answerType === "essay" ? answer : ""}
               />
             ))}
         </div>

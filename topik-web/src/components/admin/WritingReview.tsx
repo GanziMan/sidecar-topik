@@ -24,6 +24,7 @@ interface WritingReviewProps {
   correctionResult: CorrectionResponse | null;
   isCorrectionLoading: boolean;
   charCount: number;
+  answer: string;
 }
 
 export default function WritingReview({
@@ -32,6 +33,7 @@ export default function WritingReview({
   correctionResult,
   isCorrectionLoading,
   charCount,
+  answer,
 }: WritingReviewProps) {
   const [activeTab, setActiveTab] = useState<ReviewTab>("evaluation");
 
@@ -71,6 +73,7 @@ export default function WritingReview({
           correctionResult={correctionResult || undefined}
           isLoading={isCorrectionLoading}
           initialScore={evaluationResult.total_score}
+          answer={answer}
         />
       )}
 

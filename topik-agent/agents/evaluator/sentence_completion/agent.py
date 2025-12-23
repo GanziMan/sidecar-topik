@@ -25,8 +25,6 @@ def _build_system_prompt(_):
     parts = [role, rules, formatted_rubric, fewshot]
 
     built_prompt = "\n\n".join(part.strip() for part in parts if part)
-    logger.info("System prompt: \n\n" + "="*100 +
-                "\n\n" + built_prompt + "\n\n" + "="*100 + "\n\n")
     return built_prompt
 
 

@@ -1,8 +1,8 @@
 import NextAuth, { User } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { createClient } from "@/supabase/server";
-import { ACCESS_TOKEN, SESSION_ID, USER_ID } from "@/config/shared";
-import { cookies } from "next/headers";
+import { ACCESS_TOKEN } from "@/config/shared";
+
 import { Role } from "@/types/common.types";
 
 export const {
@@ -31,15 +31,7 @@ export const {
         if (error) return null;
         const { user, session } = data;
 
-        const user_id = user.id;
-        const session_id = session.access_token;
-
-        const cookieStore = await cookies();
-
         // 세션 생성 API 호출 제거 (Python 서버 리팩토링으로 인해 불필요)
-
-        cookieStore.set(USER_ID, user_id);
-        cookieStore.set(SESSION_ID, session_id);
 
         return {
           ...user,
@@ -71,10 +63,9 @@ export const {
 
     async jwt({ token, user }) {
       if (user) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        token.accessToken = (user as any).accessToken;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        token.roles = (user as any).roles;
+        token.accessToken = user.accessToken;
+
+        token.roles = user.roles;
       }
       return token;
     },

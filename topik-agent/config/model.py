@@ -19,10 +19,11 @@ def set_thinking_budget(new_budget: int) -> None:
 
 
 DEFAULT_PLANNER = BuiltInPlanner(
-    thinking_config=types.ThinkingConfig(thinking_budget=0)
+    thinking_config=types.ThinkingConfig(
+        thinking_budget=0)
 )
 GENERATE_CONTENT_CONFIG = types.GenerateContentConfig(
-    temperature=0,
+    temperature=0.0,
     top_p=0.9,
 )
 

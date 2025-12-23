@@ -69,7 +69,7 @@ export interface QuestionContent {
   };
   instruction: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  model_answer?: any;
+  model_answer?: Json;
 }
 
 // 문제 내용 가져오기
@@ -118,7 +118,6 @@ export interface CorrectionImprovement {
 }
 
 export interface CorrectionResponse {
-  original_answer: string;
   corrected_answer: string;
   sentence_corrections: CorrectionChangeSentence[];
   improvement_effects: CorrectionImprovement;

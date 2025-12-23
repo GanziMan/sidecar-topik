@@ -14,20 +14,23 @@ def _build_system_prompt(_):
 
     role = prompt_manager.get_prompt(keys.CORRECTOR_ROLE_PROMPT).value
     rules_common = prompt_manager.get_prompt(keys.CORRECTOR_RULES_PROMPT).value
-    rules_specific = prompt_manager.get_prompt(keys.CORRECTOR_OE_RULES_PROMPT).value
+    rules_specific = prompt_manager.get_prompt(
+        keys.CORRECTOR_OE_RULES_PROMPT).value
 
     fewshot = prompt_manager.get_prompt(keys.CORRECTOR_OE_FEWSHOT_PROMPT).value
     rubric_json = prompt_manager.get_prompt(
         keys.CORRECTOR_OE_CONTEXT_RUBRIC_PROMPT).value
 
-    formatted_rubric = format_context_prompt(rubric_json)
+    formatted_rubric = format_context_prompt(rubric_json, prefix="첨삭")
 
     parts = [role, rules_common, rules_specific, formatted_rubric, fewshot]
-    return "\n\n".join(part.strip() for part in parts if part)
+    built_prompt = "\n\n".join(part.strip() for part in parts if part)
+    return built_prompt
 
 
 opinion_essay_corrector_agent = LlmAgent(
     name="opinion_essay_corrector_agent",
+    instruction=_build_system_prompt,
     model=LLM_MODEL.GEMINI_25FLASH,
     description="TOPIK 54번 논술문 교정 에이전트",
     generate_content_config=GENERATE_CONTENT_CONFIG,
@@ -36,5 +39,3 @@ opinion_essay_corrector_agent = LlmAgent(
     disallow_transfer_to_parent=True,
     disallow_transfer_to_peers=True,
 )
-
-opinion_essay_corrector_agent.instruction = _build_system_prompt

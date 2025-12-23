@@ -5,6 +5,8 @@ question_number: {question_number}
 
 {question}
 
+{reference_info}
+
 [학생 답안]
 {answer}
 

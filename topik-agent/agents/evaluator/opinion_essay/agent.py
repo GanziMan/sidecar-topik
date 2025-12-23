@@ -3,6 +3,9 @@ from config.model import DEFAULT_PLANNER, GENERATE_CONTENT_CONFIG, LLM_MODEL
 import config.prompt_keys as keys
 from prompts.utils import format_context_prompt
 from schemas.response import EvaluatorWritingOutput
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def _build_system_prompt(_):
@@ -11,7 +14,8 @@ def _build_system_prompt(_):
 
     role = prompt_manager.get_prompt(keys.EVALUATOR_ROLE_PROMPT).value
     rules_common = prompt_manager.get_prompt(keys.EVALUATOR_RULES_PROMPT).value
-    rules_specific = prompt_manager.get_prompt(keys.EVALUATOR_OE_RULES_PROMPT).value
+    rules_specific = prompt_manager.get_prompt(
+        keys.EVALUATOR_OE_RULES_PROMPT).value
 
     fewshot = prompt_manager.get_prompt(keys.EVALUATOR_OE_FEWSHOT_PROMPT).value
     rubric_json = prompt_manager.get_prompt(
@@ -20,7 +24,8 @@ def _build_system_prompt(_):
     formatted_rubric = format_context_prompt(rubric_json)
 
     parts = [role, rules_common, rules_specific, formatted_rubric, fewshot]
-    return "\n\n".join(part.strip() for part in parts if part)
+    built_prompt = "\n\n".join(part.strip() for part in parts if part)
+    return built_prompt
 
 
 opinion_essay_evaluator_agent = LlmAgent(

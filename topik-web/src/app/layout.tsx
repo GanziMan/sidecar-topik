@@ -7,8 +7,6 @@ import { getQuestionOptions } from "@/lib/serverActions/questions";
 import { getThinkingBudget } from "@/lib/serverActions/agent";
 import QueryProvider from "@/providers/QueryProvider";
 
-export const dynamic = "force-dynamic";
-
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],

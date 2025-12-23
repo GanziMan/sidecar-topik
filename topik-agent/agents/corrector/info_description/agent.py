@@ -14,16 +14,18 @@ def _build_system_prompt(_):
 
     role = prompt_manager.get_prompt(keys.CORRECTOR_ROLE_PROMPT).value
     rules_common = prompt_manager.get_prompt(keys.CORRECTOR_RULES_PROMPT).value
-    rules_specific = prompt_manager.get_prompt(keys.CORRECTOR_ID_RULES_PROMPT).value
+    rules_specific = prompt_manager.get_prompt(
+        keys.CORRECTOR_ID_RULES_PROMPT).value
 
     fewshot = prompt_manager.get_prompt(keys.CORRECTOR_ID_FEWSHOT_PROMPT).value
     rubric_json = prompt_manager.get_prompt(
         keys.CORRECTOR_ID_CONTEXT_RUBRIC_PROMPT).value
 
-    formatted_rubric = format_context_prompt(rubric_json)
+    formatted_rubric = format_context_prompt(rubric_json, prefix="첨삭")
 
     parts = [role, rules_common, rules_specific, formatted_rubric, fewshot]
-    return "\n\n".join(part.strip() for part in parts if part)
+    built_prompt = "\n\n".join(part.strip() for part in parts if part)
+    return built_prompt
 
 
 info_description_corrector_agent = LlmAgent(

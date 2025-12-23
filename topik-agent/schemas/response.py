@@ -33,17 +33,17 @@ class WritingScores(BaseModel):
 
 
 class EvaluatorWritingOutput(BaseModel):
-    reasoning: str = Field(
-        description="채점하기 전, 각 평가 기준(과제 수행, 구조, 언어)별로 답안을 분석한 생각의 과정")
-    scores: WritingScores
-    total_score: int
-    strengths: List[str]
-    weaknesses: List[str]
-    improvement_suggestions: List[str]
-    overall_feedback: str
-    char_count: int
-    char_count_evaluation: str
-    model_answer: str
+    reasoning: str = Field(description="...")
+    scores: WritingScores = Field(description="평가 기준별 상세 점수")
+    total_score: int = Field(description="총점 (각 항목 점수의 합)")
+    strengths: List[str] = Field(description="답안의 강점 (없으면 빈 리스트)")
+    weaknesses: List[str] = Field(description="답안의 약점 및 감점 요인")
+    improvement_suggestions: List[str] = Field(
+        description="구체적인 개선 방안 및 학습 조언")
+    overall_feedback: str = Field(description="종합적인 평가 및 총평")
+    char_count: int = Field(description="글자수 (공백 포함)")
+    char_count_evaluation: str = Field(description="글자수 기준 충족 여부 및 감점 내용")
+    model_answer: str = Field(description="학생 답안의 오류를 수정한 최적의 모범 답안")
 
 
 # --- Corrector Schemas ---
@@ -61,15 +61,16 @@ class SentenceCorrection(BaseModel):
 
 
 class ImprovementEffects(BaseModel):
-    expected_score_gain: int
+    expected_score_gain: int = Field(description="예상 점수 상승")
     key_improvements: List[str]
 
 
 class CorrectorWritingOutput(BaseModel):
     reasoning: str = Field(
         description="교정하기 전, 글 전체의 흐름과 문장별 오류를 분석하고 수정 방향을 설정하는 생각의 과정")
-    original_answer: str
     corrected_answer: str
-    sentence_corrections: List[SentenceCorrection]
+    sentence_corrections: List[SentenceCorrection] = Field(
+        description="문장별 수정 내용")
     improvement_effects: ImprovementEffects
     overall_feedback: str
+    char_count: int = Field(0, description="교정된 답안의 실제 글자 수 (백엔드에서 계산됨)")

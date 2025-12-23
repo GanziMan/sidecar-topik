@@ -64,13 +64,10 @@ class AgentService:
             session_id=session_id,
         )
 
-        logger.info("User Prompt: \n\n" + "="*100 +
-                    "\n\n" + prompt + "\n\n" + "="*100 + "\n\n")
-
-        # Content 생성 (Multi-modal 지원)
         parts = [types.Part(text=prompt)]
 
         if image_urls:
+            import httpx
             for url in image_urls:
                 try:
                     mime_type = "image/jpeg"
@@ -79,20 +76,28 @@ class AgentService:
                     elif url.lower().endswith(".webp"):
                         mime_type = "image/webp"
 
-                    parts.append(types.Part.from_uri(
-                        file_uri=url, mime_type=mime_type))
-                    logger.info(f"Attached image from URI: {url}")
+                    # 우리 서버가 먼저 이미지를 다운로드 받아서 바이트 데이터로 전송합니다(from_bytes).
+                    with httpx.Client(timeout=10.0) as client:
+                        response = client.get(url)
+                        response.raise_for_status()
+                        image_data = response.content
+
+                        parts.append(types.Part.from_bytes(
+                            data=image_data, mime_type=mime_type))
+
                 except Exception as e:
-                    logger.error(f"Failed to attach image from {url}: {e}")
+                    logger.error(
+                        f"Failed to download/attach image from {url}: {e}")
+                    # 이미지 실패 시에도 멈추지 않고 텍스트로만 진행
+                    continue
 
         content = types.Content(
             role="user",
             parts=parts,
         )
 
-        # 실행 및 응답 수집
         response_text = ""
-        start_time = time.time()
+
         first_token_received = False
 
         async for event in runner.run_async(
@@ -101,19 +106,14 @@ class AgentService:
             new_message=content,
         ):
             if not first_token_received:
-                first_token_time = time.time() - start_time
-                logger.info(
-                    f"First token received in: {first_token_time:.2f}s")
                 first_token_received = True
 
             if event.content and event.content.parts:
                 for part in event.content.parts:
-                    # 텍스트 파트 처리
                     text_content = getattr(part, "text", None)
                     if text_content:
                         response_text += text_content
 
-                    # Function Call 파트가 있는지 확인 (디버깅용)
                     if getattr(part, "function_call", None):
                         logger.warning(
                             f"Model triggered function call: {part.function_call.name}")
@@ -121,13 +121,7 @@ class AgentService:
             if event.is_final_response():
                 break
 
-        total_time = time.time() - start_time
-        logger.info(f"Total execution time: {total_time:.2f}s")
-
-        # 응답이 비어있다면 경고 로그 출력
-
         return response_text
 
 
-# 싱글톤 인스턴스 생성
 agent_service = AgentService()

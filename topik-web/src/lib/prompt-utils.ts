@@ -18,16 +18,7 @@ export const getAgentTypeForQuestion = (questionType: QuestionType): string => {
 };
 
 export const isStructuredPrompt = (prompt: PromptContent): prompt is StructuredPrompt => {
-  return (
-    typeof prompt === "object" &&
-    prompt !== null &&
-    "sections" in prompt &&
-    "guidelines" in prompt &&
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    Array.isArray((prompt as any).sections) &&
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    Array.isArray((prompt as any).guidelines)
-  );
+  return typeof prompt === "object" && prompt !== null && "sections" in prompt && Array.isArray(prompt.sections);
 };
 
 export function getRelevantPromptKeys(questionType: QuestionType): string[] {

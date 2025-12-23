@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 // winston은 Node.js 전용 모듈이므로 클라이언트 번들에 포함되면 안 됩니다.
 // 따라서 import 대신 require를 사용하여 조건부로 로드합니다.
 
@@ -37,10 +34,7 @@ if (isServer) {
   // 모든 환경에서 콘솔 출력 (Vercel 로그 수집용)
   transports.push(
     new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      ),
+      format: winston.format.combine(winston.format.colorize(), winston.format.simple()),
     })
   );
 

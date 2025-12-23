@@ -17,8 +17,7 @@ export interface CreateSubmissionResultParams {
 }
 
 export interface SubmissionHistoryResult {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data: any[];
+  data: Json[];
   count: number | null;
 }
 

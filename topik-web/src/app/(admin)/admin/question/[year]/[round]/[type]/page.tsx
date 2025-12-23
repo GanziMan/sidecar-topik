@@ -23,6 +23,7 @@ export default async function QuestionPage({ params }: QuestionPageProps) {
       <TabsList>
         {["51", "52", "53", "54"].map((t) => (
           <TabsTrigger key={t} value={t} asChild>
+            {/* hydeated error */}
             <Link href={`/admin/question/${year}/${round}/${t}`}>{t}번</Link>
           </TabsTrigger>
         ))}

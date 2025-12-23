@@ -26,7 +26,8 @@ const createApiClient = (type: ApiClientType) => {
     headers: {
       "Content-Type": "application/json",
     },
-    timeout: 300000,
+
+    timeout: 200000,
     prefixUrl: type === "service" ? SERVICE_BASE_URL : API_BASE_URL,
     hooks: {
       afterResponse: [handleHttpError],
@@ -43,7 +44,7 @@ const createApiClient = (type: ApiClientType) => {
       const httpError = error as HTTPError;
       const status = httpError.response?.status ?? 500;
       const message = httpError.message || "Request Failed";
-      
+
       // 에러 로그 기록
       const url = httpError.request?.url || "Unknown URL";
       logError(`API Error [${status}] at ${url}: ${message}`);

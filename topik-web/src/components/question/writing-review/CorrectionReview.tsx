@@ -11,6 +11,7 @@ interface CorrectionReviewProps {
   isLoading: boolean;
   error?: string;
   initialScore: number;
+  answer: string;
 }
 // AI 첨삭
 export default function CorrectionReview({
@@ -19,6 +20,7 @@ export default function CorrectionReview({
   isLoading,
   error,
   initialScore,
+  answer,
 }: CorrectionReviewProps) {
   const isEssayQuestion = questionType === QuestionType.Q53 || questionType === QuestionType.Q54;
 
@@ -63,7 +65,7 @@ export default function CorrectionReview({
         <CorrectionCard
           title="AI 첨삭"
           contentClassName="text-base font-normal"
-          content={<CorrectedEssayView correctionResult={correctionResult} />}
+          content={<CorrectedEssayView correctionResult={correctionResult} answer={answer} />}
         />
         <CorrectionCard
           title="주요 개선 사항"
@@ -133,16 +135,17 @@ function ScoreChangeIndicator({ initialScore, scoreGain }: ScoreChangeIndicatorP
 
 interface CorrectedEssayViewProps {
   correctionResult: CorrectionResponse;
+  answer: string;
 }
 
-function CorrectedEssayView({ correctionResult }: CorrectedEssayViewProps) {
-  const { sentence_corrections, original_answer } = correctionResult;
+function CorrectedEssayView({ correctionResult, answer }: CorrectedEssayViewProps) {
+  const { sentence_corrections } = correctionResult;
 
-  if (!original_answer) {
+  if (!answer) {
     return null;
   }
 
-  const paragraphs = original_answer
+  const paragraphs = answer
     .split("\n")
     .filter((p) => p.trim() !== "")
     .map((p) => p.match(/[^.!?]+[.!?\s]*/g) || [p]);
@@ -152,7 +155,7 @@ function CorrectedEssayView({ correctionResult }: CorrectedEssayViewProps) {
   }
 
   const invalidCorrections: CorrectionChangeSentence[] = [];
-  sentence_corrections.forEach((correction, index) => {
+  sentence_corrections.forEach((correction) => {
     const { position, original, revised, reason } = correction;
     const pIndex = position.paragraph - 1;
     const sIndex = position.sentence - 1;
@@ -161,9 +164,7 @@ function CorrectedEssayView({ correctionResult }: CorrectedEssayViewProps) {
       const originalSentence = paragraphs[pIndex][sIndex];
       paragraphs[pIndex][sIndex] = originalSentence.replace(
         original.trim(),
-        `<span class='text-blue-500 font-bold' title="${reason}"><span class='text-xs text-red-300'>${
-          index + 1
-        }</span>${revised}</span>`
+        `<span class='text-blue-500 font-bold' title="${reason}">${revised}</span>`
       );
     } else {
       invalidCorrections.push(correction);
