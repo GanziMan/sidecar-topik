@@ -25,7 +25,7 @@ export function RubricDescriptionEditor({
   // UI 텍스트 설정
   const labels = {
     intro: type === "evaluator" ? "기본 평가 기준 (개요)" : "첨삭 가이드 개요",
-    items: type === "evaluator" ? "세부 감점/평가 항목 (자동 번호 매김)" : "세부 수정 지침 (자동 번호 매김)",
+    items: type === "evaluator" ? "세부 감점/평가 항목" : "세부 수정 지침",
     introPlaceholder:
       type === "evaluator"
         ? "예: 기본 점수에서 감점 방식으로 평가함."
@@ -164,7 +164,8 @@ export function RubricDescriptionEditor({
           onClick={addItem}
           className="w-full mt-2 border-dashed text-slate-500 hover:text-slate-700 hover:bg-slate-100 h-8 text-xs"
         >
-          <Plus size={12} className="mr-1" /> 항목 추가
+          <Plus size={12} className="mr-1" />
+          세부 항목 추가
         </Button>
       </div>
     </div>

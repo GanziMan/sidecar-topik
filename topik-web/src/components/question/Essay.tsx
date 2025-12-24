@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { useEffect, useRef } from "react";
+import { Textarea } from "../ui/textarea";
 
 interface EssayInputProps {
   maxLength: number;
@@ -24,7 +25,7 @@ export default function EssayInput(props: EssayInputProps) {
 
   return (
     <div className="flex flex-col gap-2.5">
-      <textarea
+      <Textarea
         className="w-full h-auto box-border overflow-hidden scroll-auto px-5 py-3.75 border-[0.5px] border-[#B3B3B3] rounded-[10px] resize-none"
         placeholder="내용을 입력하세요."
         value={essayAnswer}
