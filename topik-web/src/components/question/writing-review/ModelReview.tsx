@@ -22,8 +22,8 @@ function getModelAnswerContent(questionType: QuestionType, evaluationResult: Eva
   switch (questionType) {
     case QuestionType.Q51:
     case QuestionType.Q52: {
-      const { model_answer } = evaluationResult as SentenceCompletionResponse;
-      return `㉠ ${model_answer.answer1} \n ㉡ ${model_answer.answer2}`;
+      const { model_answer_1, model_answer_2 } = evaluationResult as SentenceCompletionResponse;
+      return `㉠ ${model_answer_1} \n ㉡ ${model_answer_2}`;
     }
     // Q53, Q54: 글쓰기 모범 답안
     case QuestionType.Q53:

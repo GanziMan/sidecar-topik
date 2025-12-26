@@ -3,9 +3,7 @@ from config.model import DEFAULT_PLANNER, GENERATE_CONTENT_CONFIG, LLM_MODEL
 import config.prompt_keys as keys
 from prompts.utils import format_context_prompt
 from schemas.response import EvaluatorWritingOutput
-import logging
-
-logger = logging.getLogger(__name__)
+from config.logger import log_system_prompt
 
 
 def _build_system_prompt(_):
@@ -25,6 +23,7 @@ def _build_system_prompt(_):
 
     parts = [role, rules_common, rules_specific, formatted_rubric, fewshot]
     built_prompt = "\n\n".join(part.strip() for part in parts if part)
+    log_system_prompt("Opinion Essay Evaluator", built_prompt)
     return built_prompt
 
 
@@ -35,8 +34,6 @@ opinion_essay_evaluator_agent = LlmAgent(
     generate_content_config=GENERATE_CONTENT_CONFIG,
     planner=DEFAULT_PLANNER,
     output_schema=EvaluatorWritingOutput,
-    disallow_transfer_to_parent=True,
-    disallow_transfer_to_peers=True,
 )
 
 opinion_essay_evaluator_agent.instruction = _build_system_prompt

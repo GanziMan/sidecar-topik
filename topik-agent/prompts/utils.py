@@ -14,24 +14,77 @@ BUFFER_LENGTH = 20        # 글자수 안전 버퍼 범위
 
 
 def format_context_prompt(context_data: Dict[str, Any], prefix: str = "채점") -> str:
-    """채점 기준(Rubric) JSON을 마크다운 표 형태로 변환"""
+    """채점 기준(Rubric) JSON을 상황에 맞는 마크다운 표 형태로 변환"""
+
+    # 1. 제목 설정
     prompt_parts = [f"[{prefix} 기준 (Rubric)]"]
 
     for section in context_data.get("sections", []):
-        prompt_parts.append(f"\n### {section.get('title', '')}")
+        title = section.get('title', '')
+        # 섹션 타이틀이 있으면 출력 (예: "확정 채점 로직", "㉠")
+        if title:
+            prompt_parts.append(f"\n### {title}")
 
-        col_header = "첨삭" if prefix == "첨삭" else "평가"
+        # 2. 헤더 동적 결정 로직
+        # 기본값 (Fallback)
+        col1_header = "항목"
+        col2_header = "내용"
+
+        # (A) 문장 완성 (Sentence Completion) 감지: 제목이 ㉠, ㉡ 등일 때
+        if title in ["㉠", "㉡"]:
+            col1_header = "등급 (Grade)"
+            col2_header = "평가 기준 (Criteria)"
+
+        # (B) 첨삭 (Corrector) 감지: prefix가 "첨삭"일 때
+        elif prefix == "첨삭" or "교정" in title:
+            col1_header = "교정 유형 (Type)"
+            col2_header = "교정 지침 (Guideline)"
+
+        # (C) 에세이 평가 (Essay Evaluator) 감지: 일반적인 채점
+        else:
+            col1_header = "평가 영역 (배점)"
+            col2_header = "상세 감점 로직 (Deterministic Logic)"
+
+        # 3. 테이블 생성
         prompt_parts.extend([
-            f"| {col_header} 유형 | {col_header} 기준 |",
-            "|:---:|:---|"
+            f"| {col1_header} | {col2_header} |",
+            "|:---|:---|"  # 왼쪽 정렬 통일
         ])
 
         for item in section.get("rubric", []):
-            prompt_parts.append(
-                f"| {item.get('score', '')} | {item.get('description', '')} |")
+            score_txt = item.get('score', '')
 
+            # [Fix] detail 필드를 우선 처리, 없으면 description 폴백
+            if "detail" in item and isinstance(item["detail"], dict):
+                detail_intro = item["detail"].get("intro", "")
+                detail_items = item["detail"].get("items", [])
+
+                # intro와 items를 합쳐서 마크다운으로 포맷팅
+                desc_parts = []
+                if detail_intro:
+                    desc_parts.append(detail_intro)
+                if detail_items:
+                    desc_parts.extend(
+                        [f"{i+1}. {txt}" for i, txt in enumerate(detail_items)])
+
+                desc_txt = "<br>".join(desc_parts)
+            else:
+                # 하위 호환성을 위해 description 필드도 처리
+                desc_txt = item.get('description', '').replace("\n", "<br>")
+
+            # score 부분 강조 (** **)
+            prompt_parts.append(
+                f"| **{score_txt}** | {desc_txt} |")
+
+    # 4. 가이드라인 추가
     if "guidelines" in context_data:
-        prompt_parts.append("\n[가이드라인]")
+        guide_title = "가이드라인"
+        if prefix == "채점":
+            guide_title = "채점 가이드라인 (Execution Rules)"
+        elif prefix == "첨삭":
+            guide_title = "첨삭 가이드라인 (Correction Rules)"
+
+        prompt_parts.append(f"\n[{guide_title}]")
         prompt_parts.extend(
             [f"- {g}" for g in context_data.get("guidelines", [])])
 
@@ -57,21 +110,28 @@ def _analyze_char_count(answer: str, question_number: int) -> str:
     if min_len == 0:
         return f"현재 글자 수: {char_count}자"
 
-    base_msg = f"분량 상태: {{status}} | 현재: {char_count}자 | 목표: {min_len}~{max_len}자 | 수정 가이드: {{guide}}"
+    base_msg = f"분량 상태: {{status}} | 현재: {char_count}자 | 목표: {min_len}~{max_len}자 | {{guide}}"
 
     if char_count < min_len:
         diff = min_len - char_count
-        sentences = round(diff / AVG_SENTENCE_LENGTH, 1)
-        return base_msg.format(status="부족", guide=f"+{diff}자 확보 필요 (약 {sentences}문장 추가)")
+        target_increase = diff + 10  # 안전 마진
+        return base_msg.format(
+            status="부족",
+            guide=f"**[절대 미션] 정확히 +{target_increase}자 내외를 추가하여 {min_len}자 이상을 맞추십시오.** (단순 예시 추가로 대응)"
+        )
 
     if char_count > max_len:
         diff = char_count - max_len
-        sentences = round(diff / AVG_SENTENCE_LENGTH, 1)
-        return base_msg.format(status="초과", guide=f"-{diff}자 압축 필요 (약 {sentences}문장 삭제)")
+        target_decrease = diff + 10  # 안전 마진
+        return base_msg.format(
+            status="초과",
+            guide=f"**[절대 미션] 정확히 -{target_decrease}자 내외를 삭제하여 {max_len}자 이하로 맞추십시오.** (수식어 삭제 위주)"
+        )
 
-    return base_msg.format(status="정상", guide="현재 분량 유지")
+    return base_msg.format(status="정상", guide="현재 분량 유지 (수정 시 글자 수 변화 최소화)")
 
 
+# Answer Preprocessor
 def _preprocess_answer(answer: str) -> str:
     """답안 전처리: 문장별 강제 줄바꿈 및 코드 블록 처리"""
     if not isinstance(answer, str):
@@ -90,6 +150,7 @@ def _preprocess_answer(answer: str) -> str:
     return "\n\n".join(formatted_paragraphs)
 
 
+# Score Guideline Builder
 def _create_score_guideline(evaluation_result: Optional[Dict], question_number: int) -> str:
     """점수 향상 가이드라인 생성"""
     if not evaluation_result:
@@ -118,8 +179,7 @@ def _format_reference_info(evaluation_result: Optional[Dict]) -> str:
     return f"```json\n{json.dumps(evaluation_result, indent=2, ensure_ascii=False)}\n```"
 
 
-# --- Builder Functions (Public) ---
-
+# Evaluator Prompt Builder
 def build_evaluator_prompt(template: str, payload_json: Dict[str, Any], question_content: str = "") -> str:
     """채점(Evaluator) 프롬프트 빌드"""
     q_num = payload_json.get("question_number")
@@ -149,6 +209,7 @@ def build_evaluator_prompt(template: str, payload_json: Dict[str, Any], question
     )
 
 
+# --- Corrector Prompt Builder ---
 def build_corrector_prompt(template: str, payload_json: Dict[str, Any], question_content: str = "") -> str:
     """첨삭(Corrector) 프롬프트 빌드"""
     q_num = payload_json.get("question_number")

@@ -51,77 +51,105 @@ class AgentService:
         """
         지정된 agent_key에 해당하는 Runner를 사용하여 실행
         """
+        start_time = time.time()
         runner = self.get_runner(agent_key)
 
         # 세션/유저 ID 생성 (요청마다 격리)
         session_id = str(uuid.uuid4())
         user_id = f"user_{session_id}"
 
-        # 세션 생성
-        await self.session_service.create_session(
-            app_name=runner.app.name,
-            user_id=user_id,
-            session_id=session_id,
-        )
+        try:
+            # 세션 생성
+            await self.session_service.create_session(
+                app_name=runner.app.name,
+                user_id=user_id,
+                session_id=session_id,
+            )
 
-        parts = [types.Part(text=prompt)]
+            parts = [types.Part(text=prompt)]
 
-        if image_urls:
-            import httpx
-            for url in image_urls:
-                try:
-                    mime_type = "image/jpeg"
-                    if url.lower().endswith(".png"):
-                        mime_type = "image/png"
-                    elif url.lower().endswith(".webp"):
-                        mime_type = "image/webp"
+            if image_urls:
+                import httpx
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    for url in image_urls:
+                        mime_type = "image/jpeg"
+                        if url.lower().endswith(".png"):
+                            mime_type = "image/png"
+                        elif url.lower().endswith(".webp"):
+                            mime_type = "image/webp"
 
-                    # 우리 서버가 먼저 이미지를 다운로드 받아서 바이트 데이터로 전송합니다(from_bytes).
-                    with httpx.Client(timeout=10.0) as client:
-                        response = client.get(url)
+                        # [Fix] await 추가
+                        response = await client.get(url)
                         response.raise_for_status()
                         image_data = response.content
 
                         parts.append(types.Part.from_bytes(
                             data=image_data, mime_type=mime_type))
 
-                except Exception as e:
-                    logger.error(
-                        f"Failed to download/attach image from {url}: {e}")
-                    # 이미지 실패 시에도 멈추지 않고 텍스트로만 진행
-                    continue
+            content = types.Content(
+                role="user",
+                parts=parts,
+            )
 
-        content = types.Content(
-            role="user",
-            parts=parts,
-        )
+            response_text = ""
 
-        response_text = ""
+            first_token_received = False
+            chunk_count = 0
+            async for event in runner.run_async(
+                user_id=user_id,
+                session_id=session_id,
+                new_message=content,
+            ):
+                chunk_count += 1
+                if not first_token_received:
+                    first_token_received = True
 
-        first_token_received = False
+                # [Debug] 토큰 사용량 상세 로깅
+                if event.usage_metadata:
+                    prompt_token = event.usage_metadata.prompt_token_count
+                    candidates_token = event.usage_metadata.candidates_token_count
+                    total_token = event.usage_metadata.total_token_count
 
-        async for event in runner.run_async(
-            user_id=user_id,
-            session_id=session_id,
-            new_message=content,
-        ):
-            if not first_token_received:
-                first_token_received = True
+                    # 매 청크마다 찍으면 너무 많을 수 있으니 첫 번째와 마지막(추정), 그리고 10번째마다 찍기
+                    if chunk_count == 1 or chunk_count % 10 == 0:
+                        logger.debug(
+                            f"Chunk {chunk_count} - Agent [{agent_key}] Token Usage - Input: {prompt_token}, Output: {candidates_token}, Total: {total_token}")
 
-            if event.content and event.content.parts:
-                for part in event.content.parts:
-                    text_content = getattr(part, "text", None)
-                    if text_content:
-                        response_text += text_content
+                    # 마지막 최종 사용량을 위해 변수에 저장해둘 수도 있음 (여기서는 로그만)
 
-                    if getattr(part, "function_call", None):
-                        logger.warning(
-                            f"Model triggered function call: {part.function_call.name}")
+                if event.content and event.content.parts:
+                    for part in event.content.parts:
+                        text_content = getattr(part, "text", None)
+                        if text_content:
+                            response_text += text_content
 
-            if event.is_final_response():
-                break
+                        if getattr(part, "function_call", None):
+                            logger.warning(
+                                f"Model triggered function call: {part.function_call.name}")
 
-        return response_text
+                if event.is_final_response():
+                    # 최종 응답 시점의 토큰 사용량 (가장 정확)
+                    if event.usage_metadata:
+                        logger.info(
+                            f"FINAL - Agent [{agent_key}] Token Usage - Input: {event.usage_metadata.prompt_token_count}, Output: {event.usage_metadata.candidates_token_count}, Total: {event.usage_metadata.total_token_count}")
+                    break
+
+            return response_text
+        # 세션 삭제
+        finally:
+            elapsed_time = time.time() - start_time
+            logger.info(
+                f"Agent [{agent_key}] execution time: {elapsed_time:.2f} seconds")
+
+            if hasattr(self.session_service, "delete_session"):
+                # [Fix] 키워드 인자로 전달 및 필수 파라미터 포함
+                await self.session_service.delete_session(
+                    app_name=runner.app.name,
+                    user_id=user_id,
+                    session_id=session_id
+                )
+            elif hasattr(self.session_service, "delete"):
+                await self.session_service.delete(session_id)
 
 
 agent_service = AgentService()

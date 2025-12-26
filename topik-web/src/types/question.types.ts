@@ -32,7 +32,8 @@ interface EvaluationBaseResponse {
 // ------------------------------------------------------------
 export interface SentenceCompletionResponse extends EvaluationBaseResponse {
   scores: SentenceCompletionAnswer<number>;
-  model_answer: SentenceCompletionAnswer;
+  model_answer_1: string;
+  model_answer_2: string;
 }
 
 // 53/54

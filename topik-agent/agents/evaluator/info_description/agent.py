@@ -3,9 +3,7 @@ from config.model import DEFAULT_PLANNER, GENERATE_CONTENT_CONFIG, LLM_MODEL
 import config.prompt_keys as keys
 from prompts.utils import format_context_prompt
 from schemas.response import EvaluatorWritingOutput
-import logging
-
-logger = logging.getLogger(__name__)
+from config.logger import log_system_prompt
 
 
 def _build_system_prompt(_):
@@ -17,15 +15,17 @@ def _build_system_prompt(_):
     rules_specific = prompt_manager.get_prompt(
         keys.EVALUATOR_ID_RULES_PROMPT).value
 
-    fewshot = prompt_manager.get_prompt(keys.EVALUATOR_ID_FEWSHOT_PROMPT).value
+    # fewshot = prompt_manager.get_prompt(keys.EVALUATOR_ID_FEWSHOT_PROMPT).value
     rubric_json = prompt_manager.get_prompt(
         keys.EVALUATOR_ID_CONTEXT_RUBRIC_PROMPT).value
 
     formatted_rubric = format_context_prompt(rubric_json)
 
-    parts = [role, rules_common, rules_specific, formatted_rubric, fewshot]
+    parts = [role, rules_common, rules_specific, formatted_rubric]
 
     built_prompt = "\n\n".join(part.strip() for part in parts if part)
+
+    log_system_prompt("Info Description Evaluator", built_prompt)
     return built_prompt
 
 
@@ -36,8 +36,6 @@ info_description_evaluator_agent = LlmAgent(
     generate_content_config=GENERATE_CONTENT_CONFIG,
     planner=DEFAULT_PLANNER,
     output_schema=EvaluatorWritingOutput,
-    disallow_transfer_to_parent=True,
-    disallow_transfer_to_peers=True,
 )
 
 info_description_evaluator_agent.instruction = _build_system_prompt

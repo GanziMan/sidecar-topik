@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, X, List, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { RubricDetail } from "@/types/prompt.types"; // [Add] 새로운 타입 임포트
 
 interface RubricDescriptionEditorProps {
-  value: string;
-  onChange: (newValue: string) => void;
+  value: RubricDetail | string;
+  onChange: (newValue: RubricDetail) => void;
   className?: string;
   type?: "evaluator" | "corrector"; // 타입 추가
 }
@@ -32,8 +33,7 @@ export function RubricDescriptionEditor({
         : "예: 학생의 의도를 해치지 않는 범위 내에서 수정함.",
     itemPlaceholder: type === "evaluator" ? "세부 평가 기준 입력" : "구체적인 첨삭 방법 입력",
   };
-
-  // 1. [Load] 초기값 파싱
+  // 초기값 파싱
   useEffect(() => {
     if (isInternalChange.current) {
       isInternalChange.current = false;
@@ -46,42 +46,34 @@ export function RubricDescriptionEditor({
       return;
     }
 
-    // \n 기준으로 분리
-    const lines = value.split("\n");
     let tempIntro = "";
     let tempItems: string[] = [];
 
-    // 파싱 로직: 첫 줄이 번호(숫자.)로 시작하지 않으면 Intro로 간주
-    if (lines.length > 0 && !/^\d+\./.test(lines[0])) {
-      tempIntro = lines[0];
-      // 나머지 줄에서 번호 패턴(1. ) 제거하고 내용만 추출
-      tempItems = lines.slice(1).map((line) => line.replace(/^\d+\.\s*/, ""));
+    if (typeof value === "string") {
+      const lines = value.split("\n");
+      if (lines.length > 0 && !/^\d+\./.test(lines[0])) {
+        tempIntro = lines[0];
+        tempItems = lines.slice(1).map((line) => line.replace(/^\d+\.\s*/, "").trim());
+      } else {
+        tempItems = lines.map((line) => line.replace(/^\d+\.\s*/, "").trim());
+      }
     } else {
-      // Intro 없이 바로 리스트인 경우
-      tempItems = lines.map((line) => line.replace(/^\d+\.\s*/, ""));
+      // value가 RubricDetail 객체인 경우
+      tempIntro = value.intro;
+      tempItems = value.items;
     }
 
     setIntro(tempIntro);
     setItems(tempItems);
   }, [value]);
 
-  // 2. [Save] 부모에게 변경 사항 전달 (Re-formatting)
   const updateParent = (newIntro: string, newItems: string[]) => {
     isInternalChange.current = true;
-    let result = newIntro.trim();
-
-    if (newItems.length > 0) {
-      // 빈 항목 필터링 (선택 사항: 여기서는 유지하되 저장 시 제외할 수도 있음)
-      const validItems = newItems;
-
-      const listString = validItems
-        .map((item, index) => `${index + 1}. ${item}`) // 번호 자동 생성 (trim 제거하여 의도적 공백 유지 가능하게 함)
-        .join("\n");
-
-      result = result ? `${result}\n${listString}` : listString;
-    }
-
-    onChange(result);
+    // [Change] 새로운 RubricDetail 객체를 생성하여 onChange로 전달
+    onChange({
+      intro: newIntro.trim(),
+      items: newItems.filter((item) => item.trim() !== ""), // 빈 항목은 저장하지 않음
+    });
   };
 
   // 핸들러

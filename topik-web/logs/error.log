@@ -48,3 +48,31 @@
 2025-12-23 14:27:46 error: API Error [500] at http://localhost:3001/writing/corrector: 'question' 
 2025-12-23 15:01:35 error: API Error [500] at Unknown URL: fetch failed 
 2025-12-23 15:24:00 error: API Error [500] at http://localhost:3001/writing/evaluator/essay: Request timed out: POST http://localhost:3001/writing/evaluator/essay 
+2025-12-23 18:09:32 error: API Error [500] at http://localhost:3001/writing/evaluator/essay: Request failed with status code 500 Internal Server Error: POST http://localhost:3001/writing/evaluator/essay 
+2025-12-23 20:10:05 error: API Error [500] at http://localhost:3000/api/questions/2025/1/54: 서버 오류가 발생했습니다. 
+2025-12-23 20:11:00 error: API Error [500] at http://localhost:3000/api/questions/2025/1/54: 서버 오류가 발생했습니다. 
+2025-12-23 20:16:53 error: API Error [500] at http://localhost:3000/api/questions/2025/1/54: 서버 오류가 발생했습니다. 
+2025-12-24 01:16:07 error: API Error [500] at http://localhost:3001/writing/evaluator/essay: Request failed with status code 500 Internal Server Error: POST http://localhost:3001/writing/evaluator/essay 
+2025-12-24 11:10:39 error: API Error [500] at http://localhost:3001/writing/evaluator/essay: delete_session() takes 1 positional argument but 2 were given 
+2025-12-24 11:11:21 error: API Error [500] at http://localhost:3001/writing/evaluator/essay: delete_session() takes 1 positional argument but 2 were given 
+2025-12-24 13:34:22 error: API Error [500] at http://localhost:3001/writing/corrector: Request timed out: POST http://localhost:3001/writing/corrector 
+2025-12-24 13:42:34 error: API Error [500] at http://localhost:3001/writing/corrector: Request timed out: POST http://localhost:3001/writing/corrector 
+2025-12-24 15:11:57 error: API Error [500] at Unknown URL: fetch failed 
+2025-12-24 15:11:59 error: API Error [500] at Unknown URL: fetch failed 
+2025-12-24 15:11:59 error: API Error [500] at Unknown URL: fetch failed 
+2025-12-24 15:12:08 error: API Error [500] at Unknown URL: fetch failed 
+2025-12-24 15:12:08 error: API Error [500] at Unknown URL: fetch failed 
+2025-12-24 15:12:14 error: API Error [500] at Unknown URL: fetch failed 
+2025-12-24 15:12:14 error: API Error [500] at Unknown URL: fetch failed 
+2025-12-24 15:12:18 error: API Error [500] at Unknown URL: fetch failed 
+2025-12-24 15:12:18 error: API Error [500] at Unknown URL: fetch failed 
+2025-12-24 15:24:47 error: API Error [500] at http://localhost:3001/writing/evaluator/essay: local variable 'total_len' referenced before assignment 
+2025-12-24 15:24:50 error: API Error [500] at http://localhost:3001/writing/evaluator/essay: local variable 'total_len' referenced before assignment 
+2025-12-24 15:25:23 error: API Error [500] at http://localhost:3001/writing/evaluator/essay: local variable 'total_len' referenced before assignment 
+2025-12-24 15:25:33 error: API Error [500] at http://localhost:3001/writing/evaluator/essay: local variable 'total_len' referenced before assignment 
+2025-12-24 16:10:33 error: API Error [500] at Unknown URL: fetch failed 
+2025-12-26 10:03:09 error: API Error [500] at http://localhost:3001/writing/evaluator/sentence: Extra data: line 1 column 1125 (char 1124) 
+2025-12-26 10:07:20 error: API Error [500] at http://localhost:3001/writing/evaluator/sentence: Extra data: line 1 column 1125 (char 1124) 
+2025-12-26 10:18:32 error: API Error [500] at http://localhost:3001/writing/evaluator/sentence: Extra data: line 1 column 1125 (char 1124) 
+2025-12-26 10:31:25 error: API Error [500] at Unknown URL: fetch failed 
+2025-12-26 10:31:25 error: API Error [500] at Unknown URL: fetch failed 

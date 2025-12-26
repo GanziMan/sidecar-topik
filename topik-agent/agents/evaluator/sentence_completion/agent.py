@@ -2,10 +2,8 @@ from google.adk.agents import LlmAgent
 from config.model import DEFAULT_PLANNER, GENERATE_CONTENT_CONFIG, LLM_MODEL
 import config.prompt_keys as keys
 from prompts.utils import format_context_prompt
-import logging
 from schemas.response import EvaluatorSentenceCompletionOutput
-
-logger = logging.getLogger(__name__)
+from config.logger import log_system_prompt
 
 
 def _build_system_prompt(_):
@@ -25,6 +23,7 @@ def _build_system_prompt(_):
     parts = [role, rules, formatted_rubric, fewshot]
 
     built_prompt = "\n\n".join(part.strip() for part in parts if part)
+    log_system_prompt("Sentence Completion Evaluator", built_prompt)
     return built_prompt
 
 
@@ -36,6 +35,4 @@ sentence_completion_evaluator_agent = LlmAgent(
     generate_content_config=GENERATE_CONTENT_CONFIG,
     planner=DEFAULT_PLANNER,
     output_schema=EvaluatorSentenceCompletionOutput,
-    disallow_transfer_to_parent=True,
-    disallow_transfer_to_peers=True,
 )

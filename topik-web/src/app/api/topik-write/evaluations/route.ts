@@ -35,7 +35,6 @@ export async function POST(request: Request): Promise<ApiResponse<EvaluationResp
   // 문제 유형에 따라 엔드포인트 분기
   const endpoint = qNum === 51 || qNum === 52 ? "writing/evaluator/sentence" : "writing/evaluator/essay";
 
-  // ServiceApiClient가 JSON 응답을 자동으로 파싱하므로 TRes를 any로 설정하여 유연하게 대응
   const response = await ServiceApiClient.post<Record<string, unknown>, any>(endpoint, {
     question_number: qNum,
     answer,

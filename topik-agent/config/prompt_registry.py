@@ -31,7 +31,6 @@ PROMPT_REGISTRY = {
         "prompts/evaluator/opinion_essay/rules.md"),
 
     # Corrector Prompts (Common)
-    prompt_keys.CORRECTOR_ROLE_PROMPT: load_prompt_text("prompts/corrector/common/role.md"),
     prompt_keys.CORRECTOR_RULES_PROMPT: load_prompt_text("prompts/corrector/common/rules.md"),
     prompt_keys.CORRECTOR_CONTEXT_TEMPLATE_PROMPT: load_prompt_text(
         "prompts/corrector/common/context_template.md"),

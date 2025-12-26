@@ -23,7 +23,8 @@ class EvaluatorSentenceCompletionOutput(BaseModel):
     weaknesses: List[str]
     improvement_suggestions: List[str]
     overall_feedback: str
-    model_answer: SentenceCompletionModelAnswer
+    model_answer_1: str = Field(description="㉠ 모범 답안")
+    model_answer_2: str = Field(description="㉡ 모범 답안")
 
 
 class WritingScores(BaseModel):

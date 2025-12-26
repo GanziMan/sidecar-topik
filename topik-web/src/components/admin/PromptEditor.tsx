@@ -156,7 +156,7 @@ function ActionButtons({
     <div className={cn("flex p-4 bg-white sticky bottom-0 z-10 justify-end")}>
       <div className="flex gap-2 items-center">
         <Button variant="outline" disabled={isLoading} onClick={onCancel}>
-          취소
+          되돌리기
         </Button>
         <Button disabled={isLoading} onClick={onSave} className="w-20">
           {isLoading ? "저장 중..." : "저장"}

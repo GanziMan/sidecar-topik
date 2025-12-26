@@ -5,7 +5,7 @@ import SentenceCompletion from "./SentenceCompletion";
 import Essay from "./Essay";
 import { Button } from "../ui/button";
 
-interface AnswerInputProps {
+interface QuestionFormProps {
   questionType: QuestionType;
   inputDisabled: boolean;
   answerType: "sentence" | "essay";
@@ -17,7 +17,7 @@ interface AnswerInputProps {
   onCorrection?: () => void;
 }
 
-export default function AnswerInput({
+export default function QuestionForm({
   answerType,
   answer,
   questionType,
@@ -25,11 +25,11 @@ export default function AnswerInput({
   inputDisabled,
   onSubmit,
   onCorrection,
-}: AnswerInputProps) {
+}: QuestionFormProps) {
   const { maxLength } = QUESTION_CONFIG[questionType];
   const isEssay = answerType === "essay";
   const isSentence = answerType === "sentence";
-  const inputLabel = inputDisabled ? "다시 채점하기" : "채점하기";
+  const inputLabel = inputDisabled ? "다시 풀이하기" : "채점하기";
 
   const renderInput = () => {
     if (isSentence) {

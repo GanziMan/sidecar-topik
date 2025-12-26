@@ -10,6 +10,7 @@ from tools.question_finder import question_finder
 from config.prompt_manager import prompt_manager
 import config.prompt_keys as keys
 from prompts.utils import build_evaluator_prompt, build_corrector_prompt
+from config.logger import log_user_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -31,15 +32,13 @@ async def evaluate_sentence(request: SentenceRequest):
 
     question_content = q_data["text"]
 
-    image_urls = []
-
     template = prompt_manager.get_prompt(
         keys.EVALUATOR_CONTEXT_TEMPLATE_PROMPT).value
     prompt = build_evaluator_prompt(template, payload, question_content)
 
-    response_text = await agent_service.run_agent(agent_key, prompt, image_urls)
-
-    return response_text
+    response_text = await agent_service.run_agent(agent_key, prompt)
+    response_json = json.loads(response_text)
+    return response_json
 
 
 @router.post("/evaluator/essay")
@@ -109,10 +108,12 @@ async def correct(request: EssayRequest):
 
     prompt = build_corrector_prompt(template, payload, question_content)
 
+    log_user_prompt("Corrector", prompt)
     response_text = await agent_service.run_agent(agent_key, prompt, image_urls)
 
     try:
         response_json = json.loads(response_text)
+
         corrected_answer = response_json.get("corrected_answer", "")
         if corrected_answer:
             response_json["char_count"] = len(corrected_answer)

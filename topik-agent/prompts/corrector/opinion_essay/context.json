@@ -1,19 +1,28 @@
 {
   "sections": [
     {
-      "title": "필수 교정 항목",
+      "title": "필수 교정 항목 (Core Correction)",
       "rubric": [
         {
           "score": "맞춤법/문법",
-          "description": "오탈자, 띄어쓰기, 조사 오류 등 명백한 문법적 오류 수정"
+          "detail": {
+            "intro": "",
+            "items": ["오탈자, 띄어쓰기, 조사 오류 등 명백한 문법적 오류 수정"]
+          }
         },
         {
           "score": "격식성(문체)",
-          "description": "구어체/해요체를 문어체(하라체)로 수정하여 격식 갖추기"
+          "detail": {
+            "intro": "",
+            "items": ["구어체/해요체를 문어체(하라체)로 수정하여 격식 갖추기"]
+          }
         },
         {
           "score": "문장 호응",
-          "description": "주어-서술어 불일치 등 비문(Broken Sentence) 수정"
+          "detail": {
+            "intro": "",
+            "items": ["주어-서술어 불일치 등 비문(Broken Sentence) 수정"]
+          }
         }
       ]
     }

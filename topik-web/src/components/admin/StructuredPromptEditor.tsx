@@ -4,7 +4,8 @@ import { ChangeEvent } from "react";
 import { produce } from "immer";
 import { Button } from "@/components/ui/button";
 import { MinusIcon, PlusIcon } from "lucide-react";
-import { StructuredPrompt } from "@/types/prompt.types";
+
+import { StructuredPrompt, RubricDetail } from "@/types/prompt.types";
 import { RubricDescriptionEditor } from "@/components/admin/RubricDescriptionEditor";
 
 interface StructuredPromptEditorProps {
@@ -12,7 +13,7 @@ interface StructuredPromptEditorProps {
   onChange?: (newPrompt: StructuredPrompt) => void;
   isLoading?: boolean;
   readOnly?: boolean;
-  promptType?: "evaluator" | "corrector"; // 타입 추가
+  promptType?: "evaluator" | "corrector";
 }
 
 export function StructuredPromptEditor({
@@ -20,12 +21,13 @@ export function StructuredPromptEditor({
   onChange = () => {},
   isLoading = false,
   readOnly = false,
-  promptType = "evaluator", // 기본값
+  promptType = "evaluator",
 }: StructuredPromptEditorProps) {
-  const handleDescriptionChange = (sIndex: number, cIndex: number, value: string) => {
+  const handleDescriptionChange = (sIndex: number, cIndex: number, value: RubricDetail) => {
     if (readOnly) return;
     const nextState = produce(prompt, (draft) => {
-      draft.sections[sIndex].rubric[cIndex].description = value;
+      draft.sections[sIndex].rubric[cIndex].detail = value;
+      delete draft.sections[sIndex].rubric[cIndex].description;
     });
     onChange(nextState);
   };
@@ -87,37 +89,50 @@ function Sections({
   promptType,
 }: {
   sections: StructuredPrompt["sections"];
-  onChange: (sIndex: number, cIndex: number, value: string) => void;
+  onChange: (sIndex: number, cIndex: number, value: RubricDetail) => void;
   isLoading: boolean;
   readOnly: boolean;
   promptType: "evaluator" | "corrector";
 }) {
   if (!sections) return null;
 
+  const formatRubricDetail = (detail: RubricDetail | string | undefined) => {
+    if (typeof detail === "string") {
+      return detail;
+    }
+    if (!detail) return "";
+
+    let formatted = detail.intro;
+    if (detail.items && detail.items.length > 0) {
+      formatted += "\n" + detail.items.map((item, index) => `${index + 1}. ${item}`).join("\n");
+    }
+    return formatted;
+  };
+
   return (
     <>
       {sections.map((section, sIndex) => (
         <div key={`${section.title}-${sIndex}`} className="mb-6 break-keep">
-          <h5 className="font-semibold">{section.title}</h5>
-          {section.rubric.map((rubric, cIndex) => (
-            <div key={`${rubric.score}-${cIndex}`} className="ml-4 mt-2 break-keep">
-              <label className="text-[13px] font-medium">{rubric.score}</label>
-              {/* 기존 Textarea 대신 RubricDescriptionEditor 사용 */}
-              <div className="mt-1">
-                {readOnly ? (
-                  <pre className="whitespace-pre-wrap text-sm text-gray-700 p-2 bg-gray-50 rounded border">
-                    {rubric.description}
-                  </pre>
-                ) : (
-                  <RubricDescriptionEditor
-                    value={rubric.description}
-                    onChange={(value) => onChange(sIndex, cIndex, value)}
-                    type={promptType}
-                  />
-                )}
+          {section.rubric.map((rubric, cIndex) => {
+            return (
+              <div key={`${rubric.score}-${cIndex}`} className="ml-4 mt-3 break-keep">
+                <label className="text-[15px] font-semibold">{rubric.score}</label>
+                <div className="mt-3">
+                  {readOnly ? (
+                    <pre className="whitespace-pre-wrap text-sm text-gray-700 p-2 bg-gray-50 rounded border">
+                      {formatRubricDetail(rubric.detail || rubric.description)}
+                    </pre>
+                  ) : (
+                    <RubricDescriptionEditor
+                      value={rubric.detail || rubric.description || ""}
+                      onChange={(newValue) => onChange(sIndex, cIndex, newValue)}
+                      type={promptType}
+                    />
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ))}
     </>

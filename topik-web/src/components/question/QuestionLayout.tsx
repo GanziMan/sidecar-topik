@@ -7,7 +7,7 @@ import { useParams } from "next/navigation";
 import { PromptContent } from "@/lib/serverActions/agent";
 import tw from "tailwind-styled-components";
 import QuestionContext from "./QuestionContext";
-
+import QuestionForm from "./QuestionForm";
 import { cn } from "@/lib/utils";
 // hooks
 import useSolver from "@/hooks/useSolver";
@@ -16,7 +16,6 @@ import useCorrection from "@/hooks/useCorrection";
 import WritingReview from "../admin/WritingReview";
 import { PromptEditor } from "../admin/PromptEditor";
 import SampleSelector from "@/components/common/SampleSelector";
-import AnswerInput from "./AnswerInput";
 
 interface QuestionLayoutProps {
   questionContent: GetQuestionContentResponse;
@@ -88,7 +87,7 @@ export default function QuestionLayout({ questionContent, prompts }: QuestionLay
             )}
 
             {/* 답안 입력 */}
-            <AnswerInput
+            <QuestionForm
               answerType={answerType}
               answer={answer}
               questionType={type}
