@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import LayoutClient from "./layoutClient";
 import AuthProvider from "@/providers/AuthProvider";
-import { getQuestionOptions } from "@/lib/serverActions/questions";
 import { getThinkingBudget } from "@/lib/serverActions/agent";
 import QueryProvider from "@/providers/QueryProvider";
 
@@ -27,7 +26,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const availableQuestions = await getQuestionOptions();
   const budgetRes = await getThinkingBudget();
 
   const initialBudget = budgetRes.success ? budgetRes?.data : 0;
@@ -37,9 +35,7 @@ export default async function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <QueryProvider>
           <AuthProvider>
-            <LayoutClient availableQuestions={availableQuestions} initialBudget={initialBudget!}>
-              {children}
-            </LayoutClient>
+            <LayoutClient initialBudget={initialBudget!}>{children}</LayoutClient>
           </AuthProvider>
         </QueryProvider>
       </body>
