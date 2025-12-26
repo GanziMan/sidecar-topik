@@ -1,7 +1,6 @@
 import NextAuth, { User } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { createClient } from "@/supabase/server";
-import { ACCESS_TOKEN } from "@/config/shared";
 
 import { Role } from "@/types/common.types";
 
@@ -74,12 +73,6 @@ export const {
       session.accessToken = token.accessToken as string;
       session.roles = token.roles as Role[] | undefined;
       return session;
-    },
-  },
-  // default lax sameSite
-  cookies: {
-    sessionToken: {
-      name: ACCESS_TOKEN,
     },
   },
 });
