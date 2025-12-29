@@ -151,18 +151,13 @@ def _preprocess_answer(answer: str) -> str:
 
 
 # Score Guideline Builder
-def _create_score_guideline(evaluation_result: Optional[Dict], question_number: int) -> str:
+def _create_score_guideline(evaluation_result: Optional[Dict], question_number: int, evaluation_scores: Optional[Dict]) -> str:
     """점수 향상 가이드라인 생성"""
     if not evaluation_result:
         return ""
 
-    total_score = 0
-    if question_number == 53 or question_number == 54:
-        total_score = evaluation_result.get("scores").get("task_performance") + evaluation_result.get(
-            "scores").get("structure") + evaluation_result.get("scores").get("language_use")
-    else:
-        total_score = evaluation_result.get("scores").get(
-            "answer1") + evaluation_result.get("scores").get("answer2")
+    total_score = evaluation_scores.get("task_performance") + evaluation_scores.get(
+        "structure") + evaluation_scores.get("language_use")
 
     q_num_str = str(question_number)
 
@@ -222,7 +217,7 @@ def build_corrector_prompt(template: str, payload_json: Dict[str, Any], question
     q_num = payload_json.get("question_number")
     answer = payload_json.get("answer", "")
     eval_result = payload_json.get("evaluation_result")
-
+    evaluation_scores = payload_json.get("evaluation_scores")
     # 1. Rubric 로드
     rubric_key = keys.CORRECTOR_ID_CONTEXT_RUBRIC_PROMPT if q_num == 53 else keys.EVALUATOR_OE_CONTEXT_RUBRIC_PROMPT
     rubric_data = prompt_manager.get_prompt(rubric_key).value
@@ -231,7 +226,8 @@ def build_corrector_prompt(template: str, payload_json: Dict[str, Any], question
     # 2. 데이터 가공 (Helper Functions 활용)
     char_guide = _analyze_char_count(answer, q_num)
     formatted_answer = _preprocess_answer(answer)
-    score_guideline = _create_score_guideline(eval_result, q_num)
+    score_guideline = _create_score_guideline(
+        eval_result, q_num, evaluation_scores)
     reference_info = _format_reference_info(eval_result)
 
     return template.format(

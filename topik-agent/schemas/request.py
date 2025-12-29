@@ -7,6 +7,7 @@ class BaseTopikRequest(BaseModel):
     exam_year: Optional[int] = None
     exam_round: Optional[int] = None
     evaluation_result: Optional[Dict[str, Any]] = None
+    evaluation_scores: Optional[Dict[str, Any]] = None
 
 
 class EssayRequest(BaseTopikRequest):

@@ -3,6 +3,7 @@ import {
   EvaluationResponseUnion,
   SentenceCompletionAnswer,
   CorrectionResponse,
+  WritingResponseScores,
 } from "@/types/question.types";
 import { NextApiClient } from "@/lib/ky";
 import { ActionResponse, QuestionParams, QuestionType } from "@/types/common.types";
@@ -43,6 +44,7 @@ export async function fetchCorrection(params: FetchCorrectionProps): Promise<Act
     questionNumber: type,
     answer: essayAnswer,
     evaluationResult,
+    evaluationScores: evaluationResult.scores as WritingResponseScores,
   };
 
   return NextApiClient.post<TopikWritingCorrectorRequest, CorrectionResponse>("api/topik-write/corrections", payload);

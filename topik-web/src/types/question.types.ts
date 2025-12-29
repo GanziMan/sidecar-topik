@@ -37,7 +37,7 @@ export interface SentenceCompletionResponse extends EvaluationBaseResponse {
 }
 
 // 53/54
-interface WritingResponseScores {
+export interface WritingResponseScores {
   task_performance: number;
   structure: number;
   language_use: number;

@@ -17,7 +17,7 @@ export async function POST(request: Request): Promise<ApiResponse<CorrectionResp
     return createErrorResponse(error.message, ErrorCode.VALIDATION_ERROR, 400);
   }
 
-  const { year, round, questionNumber, answer, evaluationResult } = parsedData;
+  const { year, round, questionNumber, answer, evaluationResult, evaluationScores } = parsedData;
 
   const response = await ServiceApiClient.post<Record<string, unknown>, any>("writing/corrector", {
     exam_year: year,
@@ -25,6 +25,7 @@ export async function POST(request: Request): Promise<ApiResponse<CorrectionResp
     question_number: questionNumber,
     answer,
     evaluation_result: evaluationResult,
+    evaluation_scores: evaluationScores,
   });
 
   if (!response.success) {

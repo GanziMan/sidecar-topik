@@ -30,6 +30,11 @@ export const topikWritingCorrectorRequestSchema = z.object({
   questionNumber: z.enum([QuestionType.Q53, QuestionType.Q54]),
   answer: z.string(),
   evaluationResult: evaluationResultSchema,
+  evaluationScores: z.object({
+    task_performance: z.number(),
+    structure: z.number(),
+    language_use: z.number(),
+  }),
 });
 
 export type TopikWritingCorrectorRequest = z.output<typeof topikWritingCorrectorRequestSchema>;
