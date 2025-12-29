@@ -234,7 +234,7 @@ function CorrectedEssayView({ correctionResult, answer, showDiffView }: Correcte
           ))}
         </p>
       ))}
-      {invalidCorrections.length > 0 && (
+      {/* {invalidCorrections.length > 0 && (
         <div className="mt-4 p-4 border border-red-200 bg-red-50 rounded-md">
           <h4 className="font-bold text-red-700">오류: 일부 첨삭을 적용할 수 없습니다.</h4>
           <p className="text-sm text-red-600">
@@ -250,7 +250,7 @@ function CorrectedEssayView({ correctionResult, answer, showDiffView }: Correcte
             ))}
           </ul>
         </div>
-      )}
+      )} */}
     </div>
   );
 }
