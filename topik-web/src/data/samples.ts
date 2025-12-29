@@ -22,7 +22,7 @@ export const SAMPLE_ANSWERS: Record<string, SampleAnswer[]> = {
       label: "중 (의미 통함/표현 단순)",
       level: "mid",
       content: {
-        answer1: "책을 드립니다",
+        answer1: "책을 드려요",
         answer2: "오세요",
       },
     },
@@ -48,8 +48,8 @@ export const SAMPLE_ANSWERS: Record<string, SampleAnswer[]> = {
       label: "중 (문맥 이해/어휘 평이)",
       level: "mid",
       content: {
-        answer1: "중독될 수 있다",
-        answer2: "먹지 않게",
+        answer1: "중독될 수 있어요",
+        answer2: "먹지 않고",
       },
     },
     {
