@@ -156,7 +156,14 @@ def _create_score_guideline(evaluation_result: Optional[Dict], question_number: 
     if not evaluation_result:
         return ""
 
-    total_score = evaluation_result.get("total_score")
+    total_score = 0
+    if question_number == 53 or question_number == 54:
+        total_score = evaluation_result.get("scores").get("task_performance") + evaluation_result.get(
+            "scores").get("structure") + evaluation_result.get("scores").get("language_use")
+    else:
+        total_score = evaluation_result.get("scores").get(
+            "answer1") + evaluation_result.get("scores").get("answer2")
+
     q_num_str = str(question_number)
 
     if q_num_str not in TOTAL_SCORE_INFO or total_score is None:

@@ -18,7 +18,6 @@ class EvaluatorSentenceCompletionOutput(BaseModel):
     reasoning: str = Field(
         description="채점하기 전, 답안의 문맥 적합성과 문법 정확성을 분석한 생각의 과정")
     scores: SentenceCompletionScores
-    total_score: int
     strengths: List[str]
     weaknesses: List[str]
     improvement_suggestions: List[str]
@@ -36,7 +35,6 @@ class WritingScores(BaseModel):
 class EvaluatorWritingOutput(BaseModel):
     reasoning: str = Field(description="...")
     scores: WritingScores = Field(description="평가 기준별 상세 점수")
-    total_score: int = Field(description="총점 (각 항목 점수의 합)")
     strengths: List[str] = Field(description="답안의 강점 (없으면 빈 리스트)")
     weaknesses: List[str] = Field(description="답안의 약점 및 감점 요인")
     improvement_suggestions: List[str] = Field(

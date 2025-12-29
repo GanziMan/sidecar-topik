@@ -10,18 +10,16 @@ def _build_system_prompt(_):
     """TOPIK 53번 설명문 평가 에이전트 시스템 프롬프트 생성"""
     from config.prompt_manager import prompt_manager
 
-    role = prompt_manager.get_prompt(keys.EVALUATOR_ROLE_PROMPT).value
     rules_common = prompt_manager.get_prompt(keys.EVALUATOR_RULES_PROMPT).value
     rules_specific = prompt_manager.get_prompt(
         keys.EVALUATOR_ID_RULES_PROMPT).value
 
-    # fewshot = prompt_manager.get_prompt(keys.EVALUATOR_ID_FEWSHOT_PROMPT).value
     rubric_json = prompt_manager.get_prompt(
         keys.EVALUATOR_ID_CONTEXT_RUBRIC_PROMPT).value
 
     formatted_rubric = format_context_prompt(rubric_json)
 
-    parts = [role, rules_common, rules_specific, formatted_rubric]
+    parts = [rules_common, rules_specific, formatted_rubric]
 
     built_prompt = "\n\n".join(part.strip() for part in parts if part)
 

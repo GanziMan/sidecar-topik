@@ -1,3 +1,4 @@
+import logging
 from fastapi import FastAPI
 from dotenv import load_dotenv
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -9,6 +10,17 @@ from middleware.error_handler import error_handling_middleware
 from router import writing, prompts, system
 
 load_dotenv()
+
+# 로깅 설정 (파일 및 콘솔 출력)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler("logs/agent.log"),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 

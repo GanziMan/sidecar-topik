@@ -12,7 +12,7 @@ export default function FeedbackCard({ title, contents }: FeedbackCardProps) {
       {Array.isArray(contents) && contents.length > 0 ? (
         <ul className="list-none list-inside ps-2">
           {contents.map((content, index) => (
-            <li key={`${title}-${index}`}>
+            <li key={`${title}-${index}`} className="text-sm">
               {"•"} {content}
             </li>
           ))}

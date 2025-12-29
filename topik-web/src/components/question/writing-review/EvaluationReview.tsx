@@ -56,7 +56,7 @@ interface SentenceCompletionViewProps {
 }
 
 function SentenceCompletionView({ questionType, evaluationResult }: SentenceCompletionViewProps) {
-  const { total_score, scores, strengths, weaknesses, improvement_suggestions } = evaluationResult;
+  const { scores, strengths, weaknesses, improvement_suggestions } = evaluationResult;
   const { totalScore, scoreInfo } = QUESTION_CONFIG[questionType];
   const feedbacks = [
     { title: "강점", content: strengths },
@@ -68,7 +68,7 @@ function SentenceCompletionView({ questionType, evaluationResult }: SentenceComp
   }
   return (
     <>
-      <ReviewScoreCard title="총점" score={total_score} totalScore={totalScore} />
+      <ReviewScoreCard title="총점" score={scores.answer1 + scores.answer2} totalScore={totalScore} />
       <div className="flex gap-5">
         <ReviewScoreCard title="ㄱ 빈칸" score={scores.answer1} totalScore={scoreInfo.answer1} />
         <ReviewScoreCard title="ㄴ 빈칸" score={scores.answer2} totalScore={scoreInfo.answer2} />
@@ -87,7 +87,7 @@ interface EssayViewProps {
 }
 
 function EssayView({ questionType, evaluationResult, charCount }: EssayViewProps) {
-  const { total_score, scores, strengths, weaknesses, improvement_suggestions } = evaluationResult;
+  const { scores, strengths, weaknesses, improvement_suggestions } = evaluationResult;
   const { totalScore, scoreInfo, charLimits } = QUESTION_CONFIG[questionType];
   const scoreInfos = [
     {
@@ -108,7 +108,11 @@ function EssayView({ questionType, evaluationResult, charCount }: EssayViewProps
 
   return (
     <>
-      <ReviewScoreCard title="총점" score={total_score} totalScore={totalScore} />
+      <ReviewScoreCard
+        title="총점"
+        score={scores.task_performance + scores.structure + scores.language_use}
+        totalScore={totalScore}
+      />
       <ReviewScoreCard
         title="글자수"
         score={charCount}

@@ -4,8 +4,6 @@ import config.prompt_keys as keys
 from prompts.utils import format_context_prompt
 from schemas.response import CorrectorWritingOutput
 
-# from google.adk.planners import BuiltInPlanner
-from google.genai import types
 from config.logger import log_system_prompt
 
 

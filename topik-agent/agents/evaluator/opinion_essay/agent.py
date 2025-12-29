@@ -10,7 +10,6 @@ def _build_system_prompt(_):
     """TOPIK 54번 논술문 평가 에이전트 시스템 프롬프트 생성"""
     from config.prompt_manager import prompt_manager
 
-    role = prompt_manager.get_prompt(keys.EVALUATOR_ROLE_PROMPT).value
     rules_common = prompt_manager.get_prompt(keys.EVALUATOR_RULES_PROMPT).value
     rules_specific = prompt_manager.get_prompt(
         keys.EVALUATOR_OE_RULES_PROMPT).value
@@ -21,7 +20,7 @@ def _build_system_prompt(_):
 
     formatted_rubric = format_context_prompt(rubric_json)
 
-    parts = [role, rules_common, rules_specific, formatted_rubric, fewshot]
+    parts = [rules_common, rules_specific, formatted_rubric, fewshot]
     built_prompt = "\n\n".join(part.strip() for part in parts if part)
     log_system_prompt("Opinion Essay Evaluator", built_prompt)
     return built_prompt

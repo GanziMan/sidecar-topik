@@ -11,7 +11,7 @@ export default async function UserLayout({ children }: { children: React.ReactNo
     return (
       <>
         <Header availableQuestions={availableQuestions} />
-        <section className="w-full py-7.5  pt-[60px]">{children}</section>
+        <section className="w-full">{children}</section>
       </>
     );
 }

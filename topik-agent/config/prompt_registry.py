@@ -3,10 +3,9 @@ from prompts.loader import load_prompt_text, load_prompt_json
 
 PROMPT_REGISTRY = {
     # Evaluator Prompts (Common)
-    prompt_keys.EVALUATOR_ROLE_PROMPT: load_prompt_text("prompts/evaluator/common/role.md"),
-    prompt_keys.EVALUATOR_RULES_PROMPT: load_prompt_text("prompts/evaluator/common/rules.md"),
+    prompt_keys.EVALUATOR_RULES_PROMPT: load_prompt_text("prompts/evaluator/rules.md"),
     prompt_keys.EVALUATOR_CONTEXT_TEMPLATE_PROMPT: load_prompt_text(
-        "prompts/evaluator/common/context_template.md"),
+        "prompts/evaluator/context_template.md"),
 
     # Evaluator - Sentence Completion
     prompt_keys.EVALUATOR_SC_CONTEXT_RUBRIC_PROMPT: load_prompt_json(
@@ -31,9 +30,9 @@ PROMPT_REGISTRY = {
         "prompts/evaluator/opinion_essay/rules.md"),
 
     # Corrector Prompts (Common)
-    prompt_keys.CORRECTOR_RULES_PROMPT: load_prompt_text("prompts/corrector/common/rules.md"),
+    prompt_keys.CORRECTOR_RULES_PROMPT: load_prompt_text("prompts/corrector/rules.md"),
     prompt_keys.CORRECTOR_CONTEXT_TEMPLATE_PROMPT: load_prompt_text(
-        "prompts/corrector/common/context_template.md"),
+        "prompts/corrector/context_template.md"),
 
     # Corrector - Info Description
     prompt_keys.CORRECTOR_ID_CONTEXT_RUBRIC_PROMPT: load_prompt_json(

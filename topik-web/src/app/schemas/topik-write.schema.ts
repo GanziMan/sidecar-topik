@@ -18,7 +18,6 @@ export const topikWritingEvaluatorRequestSchema = z.object({
 export type TopikWritingEvaluatorRequest = z.output<typeof topikWritingEvaluatorRequestSchema>;
 
 const evaluationResultSchema = z.object({
-  total_score: z.number(),
   strengths: z.array(z.string()),
   weaknesses: z.array(z.string()),
   improvement_suggestions: z.array(z.string()),

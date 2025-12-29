@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { EvaluationResponseUnion, CorrectionResponse } from "@/types/question.types";
+import { EvaluationResponseUnion, CorrectionResponse, WritingResponse } from "@/types/question.types";
 import { QuestionType } from "@/types/common.types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -50,7 +50,13 @@ export default function WritingReview({
       setActiveTab("correction");
     }
   }, [correctionResult]);
-
+  let evaluationScore = 0;
+  if (questionType === QuestionType.Q53 || questionType === QuestionType.Q54) {
+    evaluationScore =
+      (evaluationResult as WritingResponse).scores.task_performance +
+      (evaluationResult as WritingResponse).scores.structure +
+      (evaluationResult as WritingResponse).scores.language_use;
+  }
   return (
     <ReviewContainer>
       <TabList role="tablist">
@@ -72,7 +78,7 @@ export default function WritingReview({
           questionType={questionType}
           correctionResult={correctionResult || undefined}
           isLoading={isCorrectionLoading}
-          initialScore={evaluationResult.total_score}
+          initialScore={evaluationScore}
           answer={answer}
         />
       )}

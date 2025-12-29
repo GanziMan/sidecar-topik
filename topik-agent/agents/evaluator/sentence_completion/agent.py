@@ -10,7 +10,6 @@ def _build_system_prompt(_):
     """TOPIK 51, 52번 문장 완성 평가 에이전트 시스템 프롬프트 생성"""
     from config.prompt_manager import prompt_manager
 
-    role = prompt_manager.get_prompt(keys.EVALUATOR_ROLE_PROMPT).value
     rules = prompt_manager.get_prompt(keys.EVALUATOR_RULES_PROMPT).value
 
     rubric_json = prompt_manager.get_prompt(
@@ -20,7 +19,7 @@ def _build_system_prompt(_):
 
     fewshot = prompt_manager.get_prompt(keys.EVALUATOR_SC_FEWSHOT_PROMPT).value
 
-    parts = [role, rules, formatted_rubric, fewshot]
+    parts = [rules, formatted_rubric, fewshot]
 
     built_prompt = "\n\n".join(part.strip() for part in parts if part)
     log_system_prompt("Sentence Completion Evaluator", built_prompt)

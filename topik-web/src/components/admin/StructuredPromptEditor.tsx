@@ -77,6 +77,7 @@ export function StructuredPromptEditor({
         onRemove={removeGuideline}
         isLoading={isLoading}
         readOnly={readOnly}
+        promptType={promptType}
       />
     </div>
   );
@@ -116,7 +117,11 @@ function Sections({
           {section.rubric.map((rubric, cIndex) => {
             return (
               <div key={`${rubric.score}-${cIndex}`} className="ml-4 mt-3 break-keep">
-                <label className="text-[15px] font-semibold">{rubric.score}</label>
+                <label className="text-[15px] font-semibold">
+                  {section.title === "㉠" || section.title === "㉡"
+                    ? section.title + " - " + rubric.score
+                    : rubric.score}
+                </label>
                 <div className="mt-3">
                   {readOnly ? (
                     <pre className="whitespace-pre-wrap text-sm text-gray-700 p-2 bg-gray-50 rounded border">
@@ -146,6 +151,7 @@ function Guidelines({
   onRemove,
   isLoading,
   readOnly,
+  promptType,
 }: {
   guidelines: StructuredPrompt["guidelines"];
   onChange: (index: number, value: string) => void;
@@ -153,12 +159,13 @@ function Guidelines({
   onRemove: (index: number) => void;
   isLoading: boolean;
   readOnly: boolean;
+  promptType: "evaluator" | "corrector";
 }) {
   if (!guidelines || guidelines.length === 0) return null;
 
   return (
     <div>
-      <h4 className="font-semibold">작성 규칙</h4>
+      <h4 className="font-semibold">{promptType === "evaluator" ? "가이드라인" : "첨삭 가이드라인"}</h4>
       {guidelines.map((guideline, gIndex) => (
         <div key={gIndex} className="mt-2 ml-4 flex items-center">
           <Textarea value={guideline} onChange={(value) => onChange(gIndex, value)} disabled={isLoading || readOnly} />

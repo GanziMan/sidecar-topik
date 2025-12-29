@@ -20,16 +20,15 @@ export default async function QuestionPage({ params }: QuestionPageProps) {
 
   return (
     <Tabs defaultValue={type} className="w-full">
-      <TabsList>
+      <TabsList className="mt-[60px] border-b border-b-gray-200">
         {["51", "52", "53", "54"].map((t) => (
           <TabsTrigger key={t} value={t} asChild>
-            {/* hydeated error */}
             <Link href={`/admin/question/${year}/${round}/${t}`}>{t}번</Link>
           </TabsTrigger>
         ))}
       </TabsList>
       {getPromptsResponse.success && getQuestionContentResponse.success && (
-        <TabsContent value={type}>
+        <TabsContent className="mt-0" value={type}>
           <QuestionLayout questionContent={getQuestionContentResponse.data!} prompts={getPromptsResponse.data} />
         </TabsContent>
       )}
