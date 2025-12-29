@@ -164,7 +164,7 @@ function CorrectedEssayView({ correctionResult, answer }: CorrectedEssayViewProp
       const originalSentence = paragraphs[pIndex][sIndex];
       paragraphs[pIndex][sIndex] = originalSentence.replace(
         original.trim(),
-        `<span class='text-red-500 line-through' title="원본: ${original.trim()}">${original.trim()}</span> <span class='text-blue-500 font-bold' title="첨삭: ${revised} (이유: ${reason})">${revised}</span>`
+        `<span class='text-blue-500 font-bold' title="${reason}">${revised}</span>`
       );
     } else {
       invalidCorrections.push(correction);
