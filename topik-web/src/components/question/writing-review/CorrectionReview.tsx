@@ -2,8 +2,10 @@ import { Card } from "@/components/ui/card";
 import Image from "next/image";
 import { QuestionType } from "@/types/common.types";
 import { CorrectionChangeSentence, CorrectionResponse } from "@/types/question.types";
-import React from "react";
+import React, { useState } from "react";
 import { cn } from "@/lib/utils";
+import { diff_match_patch } from "diff-match-patch";
+import { Button } from "@/components/ui/button";
 
 interface CorrectionReviewProps {
   questionType: QuestionType;
@@ -23,6 +25,7 @@ export default function CorrectionReview({
   answer,
 }: CorrectionReviewProps) {
   const isEssayQuestion = questionType === QuestionType.Q53 || questionType === QuestionType.Q54;
+  const [showDiffView, setShowDiffView] = useState(true); // Diff 뷰를 기본으로 설정
 
   if (!isEssayQuestion) {
     return (
@@ -65,7 +68,31 @@ export default function CorrectionReview({
         <CorrectionCard
           title="AI 첨삭"
           contentClassName="text-base font-normal"
-          content={<CorrectedEssayView correctionResult={correctionResult} answer={answer} />}
+          content={
+            <div className="flex flex-col gap-2" data-testid="corrected-essay-view">
+              <div className="flex gap-1 justify-end mb-2">
+                <Button
+                  size={"sm"}
+                  onClick={() => setShowDiffView(true)}
+                  variant={showDiffView ? "default" : "outline"}
+                >
+                  변경점 보기
+                </Button>
+                <Button
+                  size={"sm"}
+                  onClick={() => setShowDiffView(false)}
+                  variant={!showDiffView ? "default" : "outline"}
+                >
+                  첨삭 완료본 보기
+                </Button>
+              </div>
+              <CorrectedEssayView
+                correctionResult={correctionResult}
+                answer={answer}
+                showDiffView={showDiffView} // 새로운 prop 전달
+              />
+            </div>
+          }
         />
         <CorrectionCard
           title="주요 개선 사항"
@@ -136,15 +163,22 @@ function ScoreChangeIndicator({ initialScore, scoreGain }: ScoreChangeIndicatorP
 interface CorrectedEssayViewProps {
   correctionResult: CorrectionResponse;
   answer: string;
+  showDiffView: boolean; // 새로운 prop 추가
 }
 
-function CorrectedEssayView({ correctionResult, answer }: CorrectedEssayViewProps) {
-  const { sentence_corrections } = correctionResult;
+function CorrectedEssayView({ correctionResult, answer, showDiffView }: CorrectedEssayViewProps) {
+  const { sentence_corrections, corrected_answer } = correctionResult; // corrected_answer도 가져옵니다。
 
   if (!answer) {
     return null;
   }
 
+  // 첨삭 완료본 보기 모드일 경우
+  if (!showDiffView) {
+    return <div className="whitespace-pre-line">{corrected_answer || "첨삭 완료본을 불러올 수 없습니다."}</div>;
+  }
+
+  // Diff 뷰 모드일 경우 (기존 로직)
   const paragraphs = answer
     .split("\n")
     .filter((p) => p.trim() !== "")
@@ -156,16 +190,36 @@ function CorrectedEssayView({ correctionResult, answer }: CorrectedEssayViewProp
 
   const invalidCorrections: CorrectionChangeSentence[] = [];
   sentence_corrections.forEach((correction) => {
-    const { position, original, revised, reason } = correction;
+    const { position, revised, reason } = correction;
     const pIndex = position.paragraph - 1;
     const sIndex = position.sentence - 1;
 
     if (paragraphs[pIndex] && paragraphs[pIndex][sIndex]) {
       const originalSentence = paragraphs[pIndex][sIndex];
-      paragraphs[pIndex][sIndex] = originalSentence.replace(
-        original.trim(),
-        `<span class='text-blue-500 font-bold' title="${reason}">${revised}</span>`
-      );
+
+      const dmp = new diff_match_patch(); // diff-match-patch 인스턴스 생성
+      // Diff 계산
+      const diffs = dmp.diff_main(originalSentence, revised);
+      dmp.diff_cleanupSemantic(diffs); // Diff 결과를 좀 더 의미론적으로 정리
+
+      // Diff 결과를 HTML로 변환
+      let diffHtml = "";
+      diffs.forEach((diff) => {
+        const op = diff[0]; // INSERT, DELETE, EQUAL
+        const text = diff[1];
+        if (op === 1) {
+          // INSERT (추가된 내용)
+          diffHtml += `<span class='bg-green-100 text-green-700' title="${reason}">${text}</span>`;
+        } else if (op === -1) {
+          // DELETE (삭제된 내용)
+          diffHtml += `<span class=' text-gray-400 line-through' title="${reason}">${text}</span>`;
+        } else {
+          // EQUAL (동일한 내용)
+          diffHtml += text;
+        }
+      });
+      // 원본 문장을 Diff 결과로 교체 (original.trim()이 아닌 originalSentence 전체에 대한 diff 결과 적용)
+      paragraphs[pIndex][sIndex] = diffHtml;
     } else {
       invalidCorrections.push(correction);
     }
