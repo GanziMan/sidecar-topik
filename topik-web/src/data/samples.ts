@@ -14,7 +14,7 @@ export const SAMPLE_ANSWERS: Record<string, SampleAnswer[]> = {
       label: "상 (문맥/격식 완벽)",
       level: "high",
       content: {
-        answer1: "무료로 드리려고 합니다",
+        answer1: "가져가시면 됩니다",
         answer2: "연락해 주시기 바랍니다",
       },
     },
