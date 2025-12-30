@@ -59,9 +59,6 @@ export default function QuestionLayout({ questionContent, prompts }: QuestionLay
   const { meta, instruction, context } = questionContent.content;
   const { number, score } = meta;
 
-  const evaluatorRulesPrompt = prompts![PROMPT_KEYS.EVALUATOR_RULES_PROMPT] as string;
-  const correctorRulesPrompt = prompts![PROMPT_KEYS.CORRECTOR_RULES_PROMPT] as string;
-
   const [selectedRule, setSelectedRule] = useState<"evaluator" | "corrector">("evaluator");
 
   return (
@@ -92,7 +89,13 @@ export default function QuestionLayout({ questionContent, prompts }: QuestionLay
               첨삭 규칙
             </Button>
           </div>
-          <MarkdownPreview source={selectedRule === "evaluator" ? evaluatorRulesPrompt : correctorRulesPrompt} />
+          <MarkdownPreview
+            source={
+              selectedRule === "evaluator"
+                ? (prompts![PROMPT_KEYS.EVALUATOR_RULES_PROMPT] as string)
+                : (prompts![PROMPT_KEYS.CORRECTOR_RULES_PROMPT] as string)
+            }
+          />
         </ModalDialog>
       )}
       <div className={cn("flex gap-7.5", prompts && "flex-col")}>
