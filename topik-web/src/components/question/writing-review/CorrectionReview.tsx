@@ -70,22 +70,26 @@ export default function CorrectionReview({
           contentClassName="text-base font-normal"
           content={
             <div className="flex flex-col gap-2" data-testid="corrected-essay-view">
-              <div className="flex gap-1 justify-end mb-2">
-                <Button
-                  size={"sm"}
-                  onClick={() => setShowDiffView(true)}
-                  variant={showDiffView ? "default" : "outline"}
-                >
-                  변경점 보기
-                </Button>
-                <Button
-                  size={"sm"}
-                  onClick={() => setShowDiffView(false)}
-                  variant={!showDiffView ? "default" : "outline"}
-                >
-                  첨삭 완료본 보기
-                </Button>
-              </div>
+              {!sentence_corrections ||
+                (sentence_corrections.length === 0 ? null : (
+                  <div className="flex gap-1 justify-end mb-2">
+                    <Button
+                      size={"sm"}
+                      onClick={() => setShowDiffView(true)}
+                      variant={showDiffView ? "default" : "outline"}
+                    >
+                      변경점 보기
+                    </Button>
+                    <Button
+                      size={"sm"}
+                      onClick={() => setShowDiffView(false)}
+                      variant={!showDiffView ? "default" : "outline"}
+                    >
+                      첨삭 완료본 보기
+                    </Button>
+                  </div>
+                ))}
+
               <CorrectedEssayView
                 correctionResult={correctionResult}
                 answer={answer}
@@ -234,23 +238,6 @@ function CorrectedEssayView({ correctionResult, answer, showDiffView }: Correcte
           ))}
         </p>
       ))}
-      {/* {invalidCorrections.length > 0 && (
-        <div className="mt-4 p-4 border border-red-200 bg-red-50 rounded-md">
-          <h4 className="font-bold text-red-700">오류: 일부 첨삭을 적용할 수 없습니다.</h4>
-          <p className="text-sm text-red-600">
-            AI가 생성한 문장 위치 정보가 잘못되어 다음 첨삭들이 반영되지 않았습니다.
-          </p>
-          <ul className="list-disc list-inside mt-2 text-sm text-red-600">
-            {invalidCorrections.map((c, i) => (
-              <li key={i}>
-                문단 {c.position.paragraph}, 문장 {c.position.sentence}: &quot;{c.original}&quot; &rarr; &quot;
-                {c.revised}
-                &quot;
-              </li>
-            ))}
-          </ul>
-        </div>
-      )} */}
     </div>
   );
 }
