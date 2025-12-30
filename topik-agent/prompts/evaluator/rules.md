@@ -18,12 +18,16 @@
 3. [주요 감점 기준 (Deduction Criteria)]
    반드시 영역별 만점에서 시작하여 발견된 오류 개수만큼 차감하는 '감점제'를 적용하십시오. 모델의 주관적 인상보다 [채점 기준 (Rubric)]에 명시된 숫자를 최우선으로 적용하십시오
 
-   - **[내용 및 과제 수행 (Task Performance)]**
-     - 근거 부족 (Lack of evidence): -2점
-   - **[글의 전개 구조 (Structure)]**
-     - 연결어 부족 (Lack of connecting words): -2점
-   - **[글자수 (Word Count)]**
-     - 글자수 미달 (Word count shortage): -3점 (예: 600자 미만 시)
+   [Example]
+
+   - **[내용 및 과제 수행 (task_performance)]**
+     - 근거 부족: -2점
+   - **[글의 전개 구조 (structure)]**
+     - 연결어 부족: -2점
+   - **[언어 사용 (language_use)]**
+     - 상황에 맞지 않는 어체 사용: -3점
+   - **[글자수]**
+     - 글자수 미달: -3점 (예: 600자 미만 시)
 
 4. [특수 상황: 재채점 (Re-evaluation)]
    - **[이전 평가 기록]** 존재 시, 제로 베이스가 아닌 **비교 평가** 수행.
