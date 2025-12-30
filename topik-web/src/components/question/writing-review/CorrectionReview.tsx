@@ -179,7 +179,11 @@ function CorrectedEssayView({ correctionResult, answer, showDiffView }: Correcte
 
   // 첨삭 완료본 보기 모드일 경우
   if (!showDiffView) {
-    return <div className="whitespace-pre-line">{corrected_answer || "첨삭 완료본을 불러올 수 없습니다."}</div>;
+    return (
+      <div className="whitespace-pre-line">
+        {normalizeParagraphs(corrected_answer) || "첨삭 완료본을 불러올 수 없습니다."}
+      </div>
+    );
   }
 
   // Diff 뷰 모드일 경우 (기존 로직)
@@ -240,4 +244,24 @@ function CorrectedEssayView({ correctionResult, answer, showDiffView }: Correcte
       ))}
     </div>
   );
+}
+
+export function normalizeParagraphs(answer: string) {
+  const text = answer.replace(/\r\n?/g, "\n"); // CRLF -> LF
+
+  return text
+    .split(/(\n{2,})/) // 문단 구분자 보존
+    .map((chunk, i) => {
+      if (i % 2 === 0) {
+        // 문단 내부: 단일 줄바꿈 제거
+        return chunk
+          .replace(/\n+/g, " ")
+          .replace(/[ \t]+/g, " ")
+          .trim();
+      }
+      // 문단 구분자: 2줄로 고정(3줄 이상도 2줄로)
+      return "\n\n";
+    })
+    .join("")
+    .trim();
 }
