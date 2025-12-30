@@ -134,8 +134,6 @@ def _analyze_char_count(answer: str, question_number: int) -> str:
 # Answer Preprocessor
 def _preprocess_answer(answer: str) -> str:
     """답안 전처리: 문장별 강제 줄바꿈 및 코드 블록 처리"""
-    if not isinstance(answer, str):
-        return str(answer)
 
     paragraphs = answer.split('\n')
     formatted_paragraphs = []
@@ -151,37 +149,52 @@ def _preprocess_answer(answer: str) -> str:
 
 
 # Score Guideline Builder
-def _create_score_guideline(evaluation_result: Optional[Dict], question_number: int, evaluation_scores: Optional[Dict]) -> str:
+def _create_score_guideline(question_number: int, evaluation_scores: Optional[Dict]) -> str:
     """점수 향상 가이드라인 생성"""
-    if not evaluation_result:
-        return ""
-
     total_score = evaluation_scores.get("task_performance") + evaluation_scores.get(
         "structure") + evaluation_scores.get("language_use")
-
     q_num_str = str(question_number)
-
-    if q_num_str not in TOTAL_SCORE_INFO or total_score is None:
-        return ""
-
     perfect_score = TOTAL_SCORE_INFO[q_num_str]["total"]
 
     if total_score >= perfect_score:
         return "학생의 답안은 이미 만점이므로 'expected_score_gain'은 '0점' 또는 '변동 없음'으로 설정하고, 점수 향상보다는 표현력 강화나 다른 접근법 제시에 초점을 맞춘 제안을 하세요."
-
     potential_gain = perfect_score - total_score
+
     return f"학생의 현재 점수는 {total_score}점입니다. 'expected_score_gain' 값은 {potential_gain}점을 초과할 수 없습니다. (53번 만점: 30점, 54번 만점: 50점)"
 
 
 def _format_reference_info(evaluation_result: Optional[Dict]) -> str:
-    """이전 채점 결과 포맷팅 (JSON 코드 블록 적용)"""
+    """이전 채점 결과 포맷팅 (LLM 친화적 텍스트 적용)"""
     if not evaluation_result:
-        return ""
-    # JSON 포맷으로 깔끔하게 반환하여 에이전트 혼란 방지
-    return f"```json\n{json.dumps(evaluation_result, indent=2, ensure_ascii=False)}\n```"
+        return "이전 채점 결과가 없습니다."
+
+    formatted_output = []
+
+    if evaluation_result.get("overall_feedback"):
+        formatted_output.append("### 이전 채점 전체 피드백\n")
+        formatted_output.append(f"{evaluation_result['overall_feedback']}\n")
+
+    if evaluation_result.get("strengths"):
+        formatted_output.append("### 이전 채점 강점\n")
+        for i, strength in enumerate(evaluation_result["strengths"]):
+            formatted_output.append(f"- {strength}")
+        formatted_output.append("")  # Add a blank line for better readability
+
+    if evaluation_result.get("weaknesses"):
+        formatted_output.append("### 이전 채점 약점\n")
+        for i, weakness in enumerate(evaluation_result["weaknesses"]):
+            formatted_output.append(f"- {weakness}")
+        formatted_output.append("")  # Add a blank line for better readability
+
+    if evaluation_result.get("improvement_suggestions"):
+        formatted_output.append("### 이전 채점 개선 제안\n")
+        for i, suggestion in enumerate(evaluation_result["improvement_suggestions"]):
+            formatted_output.append(f"- {suggestion}")
+        formatted_output.append("")  # Add a blank line for better readability
+
+    return "\n".join(formatted_output)
 
 
-# Evaluator Prompt Builder
 def build_evaluator_prompt(template: str, payload_json: Dict[str, Any], question_content: str = "") -> str:
     """채점(Evaluator) 프롬프트 빌드"""
     q_num = payload_json.get("question_number")
@@ -211,7 +224,6 @@ def build_evaluator_prompt(template: str, payload_json: Dict[str, Any], question
     )
 
 
-# --- Corrector Prompt Builder ---
 def build_corrector_prompt(template: str, payload_json: Dict[str, Any], question_content: str = "") -> str:
     """첨삭(Corrector) 프롬프트 빌드"""
     q_num = payload_json.get("question_number")
@@ -227,7 +239,7 @@ def build_corrector_prompt(template: str, payload_json: Dict[str, Any], question
     char_guide = _analyze_char_count(answer, q_num)
     formatted_answer = _preprocess_answer(answer)
     score_guideline = _create_score_guideline(
-        eval_result, q_num, evaluation_scores)
+        q_num, evaluation_scores)
     reference_info = _format_reference_info(eval_result)
 
     return template.format(
