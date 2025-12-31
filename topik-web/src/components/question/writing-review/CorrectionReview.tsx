@@ -173,6 +173,7 @@ interface CorrectedEssayViewProps {
 function CorrectedEssayView({ correctionResult, answer, showDiffView }: CorrectedEssayViewProps) {
   const { sentence_corrections, corrected_answer } = correctionResult; // corrected_answer도 가져옵니다。
 
+  console.log("corrected_answer", corrected_answer);
   if (!answer) {
     return null;
   }
