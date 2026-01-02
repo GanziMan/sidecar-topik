@@ -16,11 +16,6 @@ import useCorrection from "@/hooks/useCorrection";
 import WritingReview from "../admin/WritingReview";
 import { PromptEditor } from "../admin/PromptEditor";
 import SampleSelector from "@/components/common/SampleSelector";
-import { ModalDialog } from "../common/Dialog";
-import { Button } from "../ui/button";
-import MarkdownPreview from "@uiw/react-markdown-preview";
-import { PROMPT_KEYS } from "@/config/prompt-keys.config";
-import { useState } from "react";
 
 interface QuestionLayoutProps {
   questionContent: GetQuestionContentResponse;
@@ -59,45 +54,8 @@ export default function QuestionLayout({ questionContent, prompts }: QuestionLay
   const { meta, instruction, context } = questionContent.content;
   const { number, score } = meta;
 
-  const [selectedRule, setSelectedRule] = useState<"evaluator" | "corrector">("evaluator");
-
   return (
     <div className="flex gap-7.5 justify-center items-start">
-      {prompts && (
-        <ModalDialog
-          title="채점 규칙"
-          description="채점 규칙 및 첨삭 규칙을 수정할 수 있습니다."
-          trigger={
-            <Button variant={"default"} className="fixed bottom-15 left-4.5 z-50 rounded-full w-9.5 h-9.5 text-[10px]">
-              RULE
-            </Button>
-          }
-        >
-          <div className="flex gap-2">
-            <Button
-              size={"sm"}
-              variant={selectedRule === "evaluator" ? "default" : "outline"}
-              onClick={() => setSelectedRule("evaluator")}
-            >
-              채점 규칙
-            </Button>
-            <Button
-              size={"sm"}
-              variant={selectedRule === "corrector" ? "default" : "outline"}
-              onClick={() => setSelectedRule("corrector")}
-            >
-              첨삭 규칙
-            </Button>
-          </div>
-          <MarkdownPreview
-            source={
-              selectedRule === "evaluator"
-                ? (prompts![PROMPT_KEYS.EVALUATOR_RULES_PROMPT] as string)
-                : (prompts![PROMPT_KEYS.CORRECTOR_RULES_PROMPT] as string)
-            }
-          />
-        </ModalDialog>
-      )}
       <div className={cn("flex gap-7.5", prompts && "flex-col")}>
         <QuestionFormContainer>
           <QuestionTitle>{`${number}. ${instruction} (${score}점)`}</QuestionTitle>

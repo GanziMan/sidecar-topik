@@ -1,4 +1,5 @@
 import uuid
+import os
 import logging
 import time
 from typing import Dict
@@ -8,6 +9,7 @@ from google.adk.sessions.in_memory_session_service import InMemorySessionService
 from google.genai import types
 
 from config.agent_registry import AGENT_REGISTRY
+from config.constant import MIME_TYPE_MAP
 
 logger = logging.getLogger(__name__)
 
@@ -42,9 +44,7 @@ class AgentService:
                     f"Failed to initialize runner for {agent_key}: {e}")
 
     def get_runner(self, agent_key: str) -> Runner:
-        """캐싱된 Runner 반환"""
-        if agent_key not in self.runners:
-            raise ValueError(f"Unknown agent key: {agent_key}")
+        """지정된 agent_key에 해당하는 Runner를 반환"""
         return self.runners[agent_key]
 
     async def run_agent(self, agent_key: str, prompt: str, image_urls: list[str] = None) -> str:
@@ -72,11 +72,12 @@ class AgentService:
                 import httpx
                 async with httpx.AsyncClient(timeout=10.0) as client:
                     for url in image_urls:
-                        mime_type = "image/jpeg"
-                        if url.lower().endswith(".png"):
-                            mime_type = "image/png"
-                        elif url.lower().endswith(".webp"):
-                            mime_type = "image/webp"
+                        file_name = os.path.basename(url)
+                        file_extension = file_name.split(
+                            '.')[-1].lower() if '.' in file_name else ''
+
+                        mime_type = MIME_TYPE_MAP.get(
+                            file_extension, "image/jpeg")  # Default to image/jpeg
 
                         # [Fix] await 추가
                         response = await client.get(url)
@@ -91,49 +92,24 @@ class AgentService:
                 parts=parts,
             )
 
-            response_text = ""
+            response_parts = []
 
-            first_token_received = False
-            chunk_count = 0
             async for event in runner.run_async(
                 user_id=user_id,
                 session_id=session_id,
                 new_message=content,
             ):
-                chunk_count += 1
-                if not first_token_received:
-                    first_token_received = True
-
-                # [Debug] 토큰 사용량 상세 로깅
-                if event.usage_metadata:
-                    prompt_token = event.usage_metadata.prompt_token_count
-                    candidates_token = event.usage_metadata.candidates_token_count
-                    total_token = event.usage_metadata.total_token_count
-
-                    # 매 청크마다 찍으면 너무 많을 수 있으니 첫 번째와 마지막(추정), 그리고 10번째마다 찍기
-                    if chunk_count == 1 or chunk_count % 10 == 0:
-                        logger.debug(
-                            f"Chunk {chunk_count} - Agent [{agent_key}] Token Usage - Input: {prompt_token}, Output: {candidates_token}, Total: {total_token}")
-
-                    # 마지막 최종 사용량을 위해 변수에 저장해둘 수도 있음 (여기서는 로그만)
-
                 if event.content and event.content.parts:
                     for part in event.content.parts:
                         text_content = getattr(part, "text", None)
                         if text_content:
-                            response_text += text_content
+                            response_parts.append(text_content)
 
                         if getattr(part, "function_call", None):
                             logger.warning(
                                 f"Model triggered function call: {part.function_call.name}")
 
-                if event.is_final_response():
-                    # 최종 응답 시점의 토큰 사용량 (가장 정확)
-                    if event.usage_metadata:
-                        logger.info(
-                            f"FINAL - Agent [{agent_key}] Token Usage - Input: {event.usage_metadata.prompt_token_count}, Output: {event.usage_metadata.candidates_token_count}, Total: {event.usage_metadata.total_token_count}")
-                    break
-
+            response_text = "".join(response_parts)
             return response_text
         # 세션 삭제
         finally:
@@ -148,8 +124,6 @@ class AgentService:
                     user_id=user_id,
                     session_id=session_id
                 )
-            elif hasattr(self.session_service, "delete"):
-                await self.session_service.delete(session_id)
 
 
 agent_service = AgentService()

@@ -70,26 +70,22 @@ export default function CorrectionReview({
           contentClassName="text-base font-normal"
           content={
             <div className="flex flex-col gap-2" data-testid="corrected-essay-view">
-              {!sentence_corrections ||
-                (sentence_corrections.length === 0 ? null : (
-                  <div className="flex gap-1 justify-end mb-2">
-                    <Button
-                      size={"sm"}
-                      onClick={() => setShowDiffView(true)}
-                      variant={showDiffView ? "default" : "outline"}
-                    >
-                      변경점 보기
-                    </Button>
-                    <Button
-                      size={"sm"}
-                      onClick={() => setShowDiffView(false)}
-                      variant={!showDiffView ? "default" : "outline"}
-                    >
-                      첨삭 완료본 보기
-                    </Button>
-                  </div>
-                ))}
-
+              <div className="flex gap-1 justify-end mb-2">
+                <Button
+                  size={"sm"}
+                  onClick={() => setShowDiffView(true)}
+                  variant={showDiffView ? "default" : "outline"}
+                >
+                  변경점 보기
+                </Button>
+                <Button
+                  size={"sm"}
+                  onClick={() => setShowDiffView(false)}
+                  variant={!showDiffView ? "default" : "outline"}
+                >
+                  첨삭 완료본 보기
+                </Button>
+              </div>
               <CorrectedEssayView
                 correctionResult={correctionResult}
                 answer={answer}
@@ -173,18 +169,13 @@ interface CorrectedEssayViewProps {
 function CorrectedEssayView({ correctionResult, answer, showDiffView }: CorrectedEssayViewProps) {
   const { sentence_corrections, corrected_answer } = correctionResult; // corrected_answer도 가져옵니다。
 
-  console.log("corrected_answer", corrected_answer);
   if (!answer) {
     return null;
   }
 
   // 첨삭 완료본 보기 모드일 경우
   if (!showDiffView) {
-    return (
-      <div className="whitespace-pre-line">
-        {normalizeParagraphs(corrected_answer) || "첨삭 완료본을 불러올 수 없습니다."}
-      </div>
-    );
+    return <div className="whitespace-pre-line">{corrected_answer || "첨삭 완료본을 불러올 수 없습니다."}</div>;
   }
 
   // Diff 뷰 모드일 경우 (기존 로직)
@@ -243,26 +234,23 @@ function CorrectedEssayView({ correctionResult, answer, showDiffView }: Correcte
           ))}
         </p>
       ))}
+      {invalidCorrections.length > 0 && (
+        <div className="mt-4 p-4 border border-red-200 bg-red-50 rounded-md">
+          <h4 className="font-bold text-red-700">오류: 일부 첨삭을 적용할 수 없습니다.</h4>
+          <p className="text-sm text-red-600">
+            AI가 생성한 문장 위치 정보가 잘못되어 다음 첨삭들이 반영되지 않았습니다.
+          </p>
+          <ul className="list-disc list-inside mt-2 text-sm text-red-600">
+            {invalidCorrections.map((c, i) => (
+              <li key={i}>
+                문단 {c.position.paragraph}, 문장 {c.position.sentence}: &quot;{c.original}&quot; &rarr; &quot;
+                {c.revised}
+                &quot;
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
-}
-
-export function normalizeParagraphs(answer: string) {
-  const text = answer.replace(/\r\n?/g, "\n"); // CRLF -> LF
-
-  return text
-    .split(/(\n{2,})/) // 문단 구분자 보존
-    .map((chunk, i) => {
-      if (i % 2 === 0) {
-        // 문단 내부: 단일 줄바꿈 제거
-        return chunk
-          .replace(/\n+/g, " ")
-          .replace(/[ \t]+/g, " ")
-          .trim();
-      }
-      // 문단 구분자: 2줄로 고정(3줄 이상도 2줄로)
-      return "\n\n";
-    })
-    .join("")
-    .trim();
 }

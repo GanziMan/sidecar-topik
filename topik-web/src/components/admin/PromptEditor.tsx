@@ -13,6 +13,7 @@ import usePromptEditor from "@/hooks/usePromptEditor";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Json } from "@/types/supabase";
+
 interface PromptEditorProps {
   questionType: QuestionType;
   prompts: Record<string, PromptContent>;
@@ -35,8 +36,6 @@ export function PromptEditor({ prompts, questionType }: PromptEditorProps) {
     handleRestore,
     handleCancel,
   } = usePromptEditor({ initialPrompts: prompts, questionType });
-
-  // READONLY PROMPTS
 
   const renderEditorContent = () => (
     <div className="overflow-auto h-full">
@@ -105,7 +104,7 @@ function PromptTabs({ prompts, activeTab, onTabChange }: PromptTabsProps) {
 
 interface PromptEditorContentProps {
   promptKey: string;
-  content: StructuredPrompt | Json | string;
+  content: StructuredPrompt | Json;
   lastSaved: number;
   isLoading: boolean;
   onPromptChange: (content: StructuredPrompt | Json) => void;
@@ -154,7 +153,7 @@ function ActionButtons({
   onCancel: () => void;
 }) {
   return (
-    <div className={cn("flex px-4 py-2 bg-white sticky bottom-0 z-10 justify-end")}>
+    <div className={cn("flex p-4 bg-white sticky bottom-0 z-10 justify-end")}>
       <div className="flex gap-2 items-center">
         <Button variant="outline" disabled={isLoading} onClick={onCancel}>
           되돌리기

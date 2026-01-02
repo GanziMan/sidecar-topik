@@ -20,7 +20,7 @@ export default async function QuestionPage({ params }: QuestionPageProps) {
 
   return (
     <Tabs defaultValue={type} className="w-full">
-      <TabsList className="mt-[60px] border-b border-b-gray-200">
+      <TabsList>
         {["51", "52", "53", "54"].map((t) => (
           <TabsTrigger key={t} value={t} asChild>
             <Link href={`/admin/question/${year}/${round}/${t}`}>{t}번</Link>
@@ -28,7 +28,7 @@ export default async function QuestionPage({ params }: QuestionPageProps) {
         ))}
       </TabsList>
       {getPromptsResponse.success && getQuestionContentResponse.success && (
-        <TabsContent className="mt-0" value={type}>
+        <TabsContent value={type}>
           <QuestionLayout questionContent={getQuestionContentResponse.data!} prompts={getPromptsResponse.data} />
         </TabsContent>
       )}

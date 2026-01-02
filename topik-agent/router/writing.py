@@ -69,16 +69,12 @@ async def evaluate_essay(request: EssayRequest):
 
     response_text = await agent_service.run_agent(agent_key, prompt, image_urls)
 
-    try:
-        response_json = json.loads(response_text)
-        # [정확성 보정] 글자 수 계산은 백엔드에서 다시 수행하여 LLM의 실수를 방지합니다.
-        student_answer = payload.get("answer", "")
-        if student_answer:
-            response_json["char_count"] = len(student_answer)
-        return response_json
-    except Exception as e:
-        logger.error(f"Failed to parse evaluator response: {e}")
-        return response_text
+    response_json = json.loads(response_text)
+
+    student_answer = payload.get("answer", "")
+    if student_answer:
+        response_json["char_count"] = len(student_answer)
+    return response_json
 
 
 @router.post("/corrector")
@@ -89,9 +85,6 @@ async def correct(request: EssayRequest):
         agent_key = "info_description_corrector"
     elif request.question_number == 54:
         agent_key = "opinion_essay_corrector"
-    else:
-        raise HTTPException(
-            status_code=400, detail="Question number must be 53 or 54 for correction.")
 
     q_data = question_finder(
         request.exam_year, request.exam_round, request.question_number)
@@ -105,19 +98,10 @@ async def correct(request: EssayRequest):
 
     template = prompt_manager.get_prompt(
         keys.CORRECTOR_CONTEXT_TEMPLATE_PROMPT).value
-
     prompt = build_corrector_prompt(template, payload, question_content)
 
     log_user_prompt("Corrector", prompt)
     response_text = await agent_service.run_agent(agent_key, prompt, image_urls)
 
-    try:
-        response_json = json.loads(response_text)
-
-        corrected_answer = response_json.get("corrected_answer", "")
-        if corrected_answer:
-            response_json["char_count"] = len(corrected_answer)
-        return response_json
-    except Exception as e:
-        logger.error(f"Failed to parse corrector response: {e}")
-        return response_text
+    response_json = json.loads(response_text)
+    return response_json

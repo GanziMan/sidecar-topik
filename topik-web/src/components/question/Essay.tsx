@@ -13,7 +13,7 @@ interface EssayInputProps {
 export default function EssayInput(props: EssayInputProps) {
   const { maxLength, essayAnswer, handleEssayChange, inputDisabled } = props;
   const essayAnswerLength = Array.from(essayAnswer || "").length;
-  const isOverMaxLength = essayAnswerLength > maxLength;
+  const isOverMaxLength = essayAnswerLength >= maxLength;
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   useEffect(() => {

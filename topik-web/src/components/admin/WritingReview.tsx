@@ -51,11 +51,6 @@ export default function WritingReview({
     }
   }, [correctionResult]);
 
-  let evaluationScore = 0;
-  Object.values(evaluationResult.scores).forEach((value) => {
-    evaluationScore += value;
-  });
-
   return (
     <ReviewContainer>
       <TabList role="tablist">
@@ -77,7 +72,7 @@ export default function WritingReview({
           questionType={questionType}
           correctionResult={correctionResult || undefined}
           isLoading={isCorrectionLoading}
-          initialScore={evaluationScore}
+          initialScore={evaluationResult.total_score}
           answer={answer}
         />
       )}

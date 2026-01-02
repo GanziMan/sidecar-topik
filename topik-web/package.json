@@ -31,7 +31,6 @@
     "@supabase/supabase-js": "^2.81.1",
     "@tailwindcss/postcss": "^4.1.13",
     "@tanstack/react-query": "^5.90.12",
-    "@uiw/react-markdown-preview": "^5.1.5",
     "ai": "^5.0.75",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
