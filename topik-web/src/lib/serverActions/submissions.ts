@@ -25,7 +25,6 @@ export async function saveEvaluationResult(params: {
         promptSnapshot = Object.keys(promptsResponse.data)
           .filter((key) => relevantKeys.includes(key))
           .reduce((obj, key) => {
-            // @ts-expect-error key access on unknown record
             obj[key] = promptsResponse.data[key];
             return obj;
           }, {} as Record<string, unknown>);

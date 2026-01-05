@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import { useEffect, useRef } from "react";
 import { Textarea } from "../ui/textarea";
+import tw from "tailwind-styled-components";
 
 interface EssayInputProps {
   maxLength: number;
@@ -13,7 +14,7 @@ interface EssayInputProps {
 export default function EssayInput(props: EssayInputProps) {
   const { maxLength, essayAnswer, handleEssayChange, inputDisabled } = props;
   const essayAnswerLength = Array.from(essayAnswer || "").length;
-  const isOverMaxLength = essayAnswerLength >= maxLength;
+  const isOverMaxLength = essayAnswerLength > maxLength;
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   useEffect(() => {
@@ -24,7 +25,7 @@ export default function EssayInput(props: EssayInputProps) {
   }, [essayAnswer]);
 
   return (
-    <div className="flex flex-col gap-2.5">
+    <EssayInputContainer>
       <Textarea
         className="w-full h-auto box-border overflow-hidden scroll-auto px-5 py-3.75 border-[0.5px] border-[#B3B3B3] rounded-[10px] resize-none"
         placeholder="내용을 입력하세요."
@@ -37,6 +38,8 @@ export default function EssayInput(props: EssayInputProps) {
       <span className={cn("text-right text-[#9D9D9D]", isOverMaxLength && "text-[#FF645F]")}>
         {essayAnswerLength} / {maxLength}
       </span>
-    </div>
+    </EssayInputContainer>
   );
 }
+
+const EssayInputContainer = tw.div`flex flex-col gap-2.5`;

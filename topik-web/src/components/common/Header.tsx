@@ -13,8 +13,13 @@ import { questionParamsSchema } from "@/app/schemas/topik-write.schema";
 import SelectFilter from "../admin/SelectFilter";
 import ThinkingBudget from "../admin/ThinkingBudget";
 import UserProfile from "./UserProfile";
+import tw from "tailwind-styled-components";
 
-export default function Header({ availableQuestions = [] }: { availableQuestions?: QuestionOption[] }) {
+interface HeaderProps {
+  availableQuestions?: QuestionOption[];
+}
+
+export default function Header({ availableQuestions = [] }: HeaderProps) {
   const { data: session } = useSession();
   const params = useParams<{ year: string; round: string; type: QuestionType }>();
   const router = useRouter();
@@ -34,17 +39,12 @@ export default function Header({ availableQuestions = [] }: { availableQuestions
   const uniqueYears = Array.from(new Set(availableQuestions.map((q) => q.year))).sort((a, b) => b - a);
   const uniqueRounds = Array.from(new Set(availableQuestions.map((q) => q.round))).sort((a, b) => b - a);
 
-  const handleYearChange = (newYear: string) => {
-    router.push(`${basePath}/${newYear}/${round}/${type}`);
-  };
-
-  const handleRoundChange = (newRound: string) => {
-    router.push(`${basePath}/${year}/${newRound}/${type}`);
-  };
+  const handleYearChange = (newYear: string) => router.push(`${basePath}/${newYear}/${round}/${type}`);
+  const handleRoundChange = (newRound: string) => router.push(`${basePath}/${year}/${newRound}/${type}`);
 
   return (
-    <header className="fixed bg-inherit top-0 left-0 right-0 z-50 flex justify-between items-center w-full h-[60px] border-[#DDDDDD] px-5">
-      <div className="flex gap-1.5 items-center">
+    <Hedaer>
+      <HeaderContent>
         <SelectFilter placeholder="연도" value={year} handleChange={handleYearChange} uniqueValues={uniqueYears} />
         <SelectFilter
           label="회"
@@ -53,11 +53,11 @@ export default function Header({ availableQuestions = [] }: { availableQuestions
           handleChange={handleRoundChange}
           uniqueValues={uniqueRounds}
         />
-      </div>
+      </HeaderContent>
 
       {/* User Actions */}
       <UserActions isAdmin={isAdmin!} userEmail={userEmail!} />
-    </header>
+    </Hedaer>
   );
 }
 
@@ -81,3 +81,6 @@ function UserActions({ isAdmin, userEmail }: UserActionsProps) {
     </div>
   );
 }
+
+const Hedaer = tw.header`fixed bg-inherit top-0 left-0 right-0 z-50 flex justify-between items-center w-full h-[60px] border-[#DDDDDD] px-5`;
+const HeaderContent = tw.div`flex gap-1.5 items-center`;

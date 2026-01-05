@@ -13,20 +13,22 @@ export async function POST(request: Request): Promise<ApiResponse<CorrectionResp
   const { success, data: parsedData, error } = topikWritingCorrectorRequestSchema.safeParse(clientRequest);
 
   if (!success) {
-    console.error("validation error:", error);
     return createErrorResponse(error.message, ErrorCode.VALIDATION_ERROR, 400);
   }
 
   const { year, round, questionNumber, answer, evaluationResult, evaluationScores } = parsedData;
 
-  const response = await ServiceApiClient.post<Record<string, unknown>, any>("writing/corrector", {
-    exam_year: year,
-    exam_round: round,
-    question_number: questionNumber,
-    answer,
-    evaluation_result: evaluationResult,
-    evaluation_scores: evaluationScores,
-  });
+  const response = await ServiceApiClient.post<Record<string, unknown>, ApiResponse<CorrectionResponse>>(
+    "writing/corrector",
+    {
+      exam_year: year,
+      exam_round: round,
+      question_number: questionNumber,
+      answer,
+      evaluation_result: evaluationResult,
+      evaluation_scores: evaluationScores,
+    }
+  );
 
   if (!response.success) {
     return createErrorResponse(response.error.message, response.error.code, 500);
@@ -35,14 +37,12 @@ export async function POST(request: Request): Promise<ApiResponse<CorrectionResp
   // 무적의 파싱 로직 적용
   const agentResponse = parseAgentResponse<CorrectionResponse>(response.data);
 
-  if (!agentResponse) {
-    console.error("Failed to parse agent response:", response.data);
+  if (!agentResponse)
     return createErrorResponse(
       "첨삭을 진행할 수 없습니다. 에이전트 응답 형식이 올바르지 않습니다.",
       ErrorCode.VALIDATION_ERROR,
       400
     );
-  }
 
   return NextResponse.json(agentResponse);
 }

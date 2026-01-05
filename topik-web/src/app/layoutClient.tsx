@@ -4,13 +4,12 @@ import { RootToaster } from "@/providers/RootToaster";
 import { useThinkingBudgetStore } from "@/stores/thinking-budget.store";
 import { useEffect, useRef } from "react";
 
-export default function LayoutClient({
-  children,
-  initialBudget,
-}: Readonly<{
+interface LayoutClientProps {
   children: React.ReactNode;
   initialBudget: number;
-}>) {
+}
+
+export default function LayoutClient({ children, initialBudget }: LayoutClientProps) {
   const { setBudgetFromValue } = useThinkingBudgetStore();
   const initialized = useRef(false);
 

@@ -30,4 +30,4 @@ export interface ErrorResponse {
 }
 export type ApiResponse<T> = NextResponse<T | ErrorResponse>;
 
-export type ActionResponse<T = void> = { success: true; data?: T } | { success: false; error: ErrorResponse };
+export type ActionResponse<T = void> = { success: true; data: T } | { success: false; error: ErrorResponse };

@@ -34,7 +34,7 @@ export default function useSolver(params: UseSolverProps) {
       const errorMessage = response.error?.message;
       if (response.error?.code === ErrorCode.SESSION_NOT_FOUND) router.push("/login");
       toast.error(errorMessage);
-    } else setEvaluationResult(response.data!);
+    } else setEvaluationResult(response.data);
 
     setIsLoading(false);
   };

@@ -30,7 +30,7 @@ export default function useCorrection({ year, round, type, essayAnswer, evaluati
         essayAnswer,
         evaluationResult,
       });
-      if (result.success) setCorrectionResult(result.data!);
+      if (result.success) setCorrectionResult(result.data);
       else toast.error(result.error.message);
     } catch (error) {
       if (error instanceof HTTPError && error.response.status === 401) router.push("/login");

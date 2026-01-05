@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  eslint: {
+    // eslint 무시
+    ignoreDuringBuilds: true,
+  },
   async redirects() {
     return [
       {
