@@ -1,5 +1,4 @@
 from typing import Dict, Any, Optional
-import json
 import logging
 import re
 import config.prompt_keys as keys
@@ -218,7 +217,7 @@ def build_evaluator_prompt(template: str, payload_json: Dict[str, Any], question
         exam_round=payload_json.get("exam_round"),
         question_number=q_num,
         question=question_content,
-        answer=json.dumps(answer, ensure_ascii=False),
+        answer=answer,
         answer_length_prompt=char_info,
         reference_info=reference_info,
     )
