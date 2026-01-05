@@ -9,14 +9,20 @@ import tw from "tailwind-styled-components";
 import QuestionContext from "./QuestionContext";
 import QuestionForm from "./QuestionForm";
 import { cn } from "@/lib/utils";
+
+import WritingReview from "../admin/WritingReview";
+import { PromptEditor } from "../admin/PromptEditor";
+import SampleSelector from "@/components/common/SampleSelector";
+import { ModalDialog } from "../common/Dialog";
+import { Button } from "../ui/button";
+import MarkdownPreview from "@uiw/react-markdown-preview";
+import { PROMPT_KEYS } from "@/config/prompt-keys.config";
+import { useState } from "react";
+
 // hooks
 import useSolver from "@/hooks/useSolver";
 import useAnswerForm from "@/hooks/useAnswerForm";
 import useCorrection from "@/hooks/useCorrection";
-import WritingReview from "../admin/WritingReview";
-import { PromptEditor } from "../admin/PromptEditor";
-import SampleSelector from "@/components/common/SampleSelector";
-
 interface QuestionLayoutProps {
   questionContent: GetQuestionContentResponse;
   prompts?: Record<string, PromptContent>;
@@ -24,13 +30,8 @@ interface QuestionLayoutProps {
 
 export default function QuestionLayout({ questionContent, prompts }: QuestionLayoutProps) {
   const { year, round, type } = useParams<{ year: string; round: string; type: QuestionType }>();
-  const {
-    type: answerType,
-    onChange: handleAnswerChange,
-    data: answer,
-    setValue: handleSetAnswer,
-    reset: handleResetAnswer,
-  } = useAnswerForm(type);
+  const answerForm = useAnswerForm(type);
+  const { type: answerType, onChange: handleAnswerChange, data: answer, reset: handleResetAnswer } = answerForm;
 
   const {
     evaluationResult,
@@ -54,8 +55,50 @@ export default function QuestionLayout({ questionContent, prompts }: QuestionLay
   const { meta, instruction, context } = questionContent.content;
   const { number, score } = meta;
 
+  const [selectedRule, setSelectedRule] = useState<"evaluator" | "corrector">("evaluator");
+
+  const handleSetAnswer = (value: string | { answer1: string; answer2: string }) => {
+    if (answerForm.type === "sentence") answerForm.setValue?.(value as { answer1: string; answer2: string });
+    else if (answerForm.type === "essay") answerForm.setValue?.(value as string);
+  };
+
   return (
-    <div className="flex gap-7.5 justify-center items-start">
+    <QuestionLayoutContainer>
+      {prompts && (
+        <ModalDialog
+          title="채점 규칙"
+          description="채점 규칙 및 첨삭 규칙을 수정할 수 있습니다."
+          trigger={
+            <Button variant={"default"} className="fixed bottom-15 left-4.5 z-50 rounded-full w-9.5 h-9.5 text-[10px]">
+              RULE
+            </Button>
+          }
+        >
+          <div className="flex gap-2">
+            <Button
+              size={"sm"}
+              variant={selectedRule === "evaluator" ? "default" : "outline"}
+              onClick={() => setSelectedRule("evaluator")}
+            >
+              채점 규칙
+            </Button>
+            <Button
+              size={"sm"}
+              variant={selectedRule === "corrector" ? "default" : "outline"}
+              onClick={() => setSelectedRule("corrector")}
+            >
+              첨삭 규칙
+            </Button>
+          </div>
+          <MarkdownPreview
+            source={
+              selectedRule === "evaluator"
+                ? (prompts![PROMPT_KEYS.EVALUATOR_RULES_PROMPT] as string)
+                : (prompts![PROMPT_KEYS.CORRECTOR_RULES_PROMPT] as string)
+            }
+          />
+        </ModalDialog>
+      )}
       <div className={cn("flex gap-7.5", prompts && "flex-col")}>
         <QuestionFormContainer>
           <QuestionTitle>{`${number}. ${instruction} (${score}점)`}</QuestionTitle>
@@ -74,15 +117,7 @@ export default function QuestionLayout({ questionContent, prompts }: QuestionLay
                 year={Number(year)}
                 round={Number(round)}
                 questionType={type}
-                onSelect={(sample) => {
-                  if (answerType === "sentence" && typeof sample.content !== "string") {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    (handleSetAnswer as any)(sample.content);
-                  } else if (answerType === "essay" && typeof sample.content === "string") {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    (handleSetAnswer as any)(sample.content);
-                  }
-                }}
+                onSelect={(sample) => handleSetAnswer(sample.content)}
               />
             )}
 
@@ -110,7 +145,7 @@ export default function QuestionLayout({ questionContent, prompts }: QuestionLay
         {/* 채점 결과 */}
         {evaluationResult &&
           ("error" in evaluationResult ? (
-            <div className="text-red-500">{evaluationResult.error as string}</div>
+            <EvaluationError>{evaluationResult.error as string}</EvaluationError>
           ) : (
             <WritingReview
               questionType={type}
@@ -124,18 +159,20 @@ export default function QuestionLayout({ questionContent, prompts }: QuestionLay
       </div>
 
       {prompts && (
-        <div className="sticky top-[80px] h-fit w-full max-w-[553px]">
+        <PromptEditorContainer>
           <PromptEditor prompts={prompts} questionType={type} />
-        </div>
+        </PromptEditorContainer>
       )}
-    </div>
+    </QuestionLayoutContainer>
   );
 }
 
+const QuestionLayoutContainer = tw.div`flex gap-7.5 justify-center items-start`;
+const PromptEditorContainer = tw.div`sticky top-[80px] h-fit w-full max-w-[553px]`;
 const QuestionFormContainer = tw.div`
   p-5 flex flex-col gap-7.5 bg-white w-[553px]
 `;
-
 const QuestionTitle = tw.p`
   font-semibold
 `;
+const EvaluationError = tw.div`text-red-500`;

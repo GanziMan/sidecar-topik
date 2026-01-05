@@ -3,7 +3,11 @@ import { Role } from "@/types/common.types";
 import Header from "@/components/common/Header";
 import { getQuestionOptions } from "@/lib/serverActions/questions";
 
-export default async function UserLayout({ children }: { children: React.ReactNode }) {
+interface UserLayoutProps {
+  children: React.ReactNode;
+}
+
+export default async function UserLayout({ children }: UserLayoutProps) {
   const session = await getSession();
   const isUser = session?.roles?.includes(Role.USER);
   const availableQuestions = await getQuestionOptions();

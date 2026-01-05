@@ -6,7 +6,7 @@ export const createResponse = <T>(data: T, status: number): NextResponse<T> => {
 };
 
 export const createActionResponse = <T = void>(data?: T): ActionResponse<T> => {
-  return { success: true, data };
+  return { success: true, data: data ?? (null as unknown as T) };
 };
 
 export const createActionError = (message: string, code?: string): ActionResponse<never> => {

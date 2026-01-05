@@ -1,6 +1,7 @@
 import { QuestionContent } from "@/types/question.types";
 import { STOAGE_URL } from "@/config/shared";
 import Image from "next/image";
+import tw from "tailwind-styled-components";
 
 interface QuestionContextProps {
   content: QuestionContent["context"];
@@ -32,9 +33,7 @@ export default function QuestionContext({ content, year, round, questionNumber }
   }
 
   // 텍스트만 있는 경우 (51, 52, 54번 등)
-  return (
-    <div className="flex flex-col border border-[#B4B4B4] p-7 whitespace-pre-wrap leading-relaxed">
-      {content.content}
-    </div>
-  );
+  return <QuestionContextContainer>{content.content}</QuestionContextContainer>;
 }
+
+const QuestionContextContainer = tw.div`flex flex-col border border-[#B4B4B4] p-7 whitespace-pre-wrap leading-relaxed`;

@@ -5,6 +5,7 @@ import { getPrompts } from "@/lib/serverActions/agent";
 import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import QuestionLayout from "@/components/question/QuestionLayout";
+import { QUESTION_TYPES } from "@/config/question.config";
 
 interface QuestionPageProps {
   params: Promise<QuestionParams>;
@@ -21,7 +22,7 @@ export default async function QuestionPage({ params }: QuestionPageProps) {
   return (
     <Tabs defaultValue={type} className="w-full">
       <TabsList>
-        {["51", "52", "53", "54"].map((t) => (
+        {QUESTION_TYPES.map((t) => (
           <TabsTrigger key={t} value={t} asChild>
             <Link href={`/admin/question/${year}/${round}/${t}`}>{t}번</Link>
           </TabsTrigger>
@@ -29,7 +30,7 @@ export default async function QuestionPage({ params }: QuestionPageProps) {
       </TabsList>
       {getPromptsResponse.success && getQuestionContentResponse.success && (
         <TabsContent value={type}>
-          <QuestionLayout questionContent={getQuestionContentResponse.data!} prompts={getPromptsResponse.data} />
+          <QuestionLayout questionContent={getQuestionContentResponse.data} prompts={getPromptsResponse.data} />
         </TabsContent>
       )}
     </Tabs>

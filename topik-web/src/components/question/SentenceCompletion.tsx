@@ -3,10 +3,11 @@
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { SentenceCompletionAnswer } from "@/types/question.types";
+import tw from "tailwind-styled-components";
 
 const answerFields = [
-  { symbol: "ㄱ", key: "answer1" as const },
-  { symbol: "ㄴ", key: "answer2" as const },
+  { symbol: "ㄱ", key: "answer1" },
+  { symbol: "ㄴ", key: "answer2" },
 ];
 
 interface SentenceCompletionProps {
@@ -20,17 +21,17 @@ export default function SentenceCompletion({
   inputDisabled,
 }: SentenceCompletionProps) {
   return (
-    <div className="flex flex-col gap-5">
+    <SentenceCompletionContainer>
       {answerFields.map((field) => (
         <SentenceCompletionInput
           key={field.symbol}
           symbol={field.symbol}
-          value={sentenceCompletionAnswer[field.key]}
+          value={sentenceCompletionAnswer[field.key as keyof SentenceCompletionAnswer]}
           onChange={handleSentenceCompletionAnswerChange}
           disabled={inputDisabled}
         />
       ))}
-    </div>
+    </SentenceCompletionContainer>
   );
 }
 
@@ -44,10 +45,8 @@ interface SentenceCompletionInputProps {
 
 function SentenceCompletionInput({ symbol, value, onChange, className, disabled }: SentenceCompletionInputProps) {
   return (
-    <div className="relative">
-      <div className="w-[33px] h-[33px] rounded-full absolute top-[15px] left-5 border-[#B3B3B3] border-[0.5px] flex items-center justify-center">
-        {symbol}
-      </div>
+    <SentenceCompletionInputContainer>
+      <SentenceCompletionSymbol>{symbol}</SentenceCompletionSymbol>
 
       <Input
         type="text"
@@ -57,6 +56,10 @@ function SentenceCompletionInput({ symbol, value, onChange, className, disabled 
         onChange={(e) => onChange?.(e, symbol)}
         disabled={disabled}
       />
-    </div>
+    </SentenceCompletionInputContainer>
   );
 }
+
+const SentenceCompletionContainer = tw.div`flex flex-col gap-5`;
+const SentenceCompletionSymbol = tw.div`w-[33px] h-[33px] rounded-full absolute top-[15px] left-5 border-[#B3B3B3] border-[0.5px] flex items-center justify-center`;
+const SentenceCompletionInputContainer = tw.div`relative`;

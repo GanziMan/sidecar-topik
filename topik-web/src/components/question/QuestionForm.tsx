@@ -4,6 +4,7 @@ import { QUESTION_CONFIG } from "@/config/question.config";
 import SentenceCompletion from "./SentenceCompletion";
 import Essay from "./Essay";
 import { Button } from "../ui/button";
+import tw from "tailwind-styled-components";
 
 interface QuestionFormProps {
   questionType: QuestionType;
@@ -58,9 +59,9 @@ export default function QuestionForm({
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <QuestionFormContainer>
       {renderInput()}
-      <div className="flex gap-2 w-full">
+      <QuestionFormButtonsContainer>
         <Button size={"lg"} onClick={onSubmit} variant="default" className="text-lg h-10 flex-1">
           {inputLabel}
         </Button>
@@ -69,7 +70,10 @@ export default function QuestionForm({
             AI 첨삭하기
           </Button>
         )}
-      </div>
-    </div>
+      </QuestionFormButtonsContainer>
+    </QuestionFormContainer>
   );
 }
+
+const QuestionFormContainer = tw.div`flex flex-col gap-4`;
+const QuestionFormButtonsContainer = tw.div`flex gap-2 w-full`;
