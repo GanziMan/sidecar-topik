@@ -5,10 +5,16 @@ import { ErrorCode } from "@/config/error-codes.config";
 import { ApiResponse } from "@/types/common.types";
 import { QuestionRepository } from "@/repositories/question.repository";
 
+interface GetQuestionContentRouteParams {
+  year: string;
+  round: string;
+  type: string;
+}
+
 // 문제 조회 api
 export async function GET(
   _req: NextRequest,
-  { params }: { params: Promise<{ year: string; round: string; type: string }> }
+  { params }: { params: Promise<GetQuestionContentRouteParams> }
 ): Promise<ApiResponse<GetQuestionContentResponse>> {
   const { year, round, type } = await params;
 

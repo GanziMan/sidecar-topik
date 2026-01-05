@@ -5,10 +5,14 @@ import { ErrorCode } from "@/config/error-codes.config";
 import { SubmissionRepository } from "@/repositories/submission.repository";
 import { UserRepository } from "@/repositories/user.repository";
 
+interface GetUserSubmissionsRouteParams {
+  question_id: string;
+}
+
 // 해당 문제에 대한 채점 기록을 조회하는 API
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ question_id: string }> }
+  { params }: { params: Promise<GetUserSubmissionsRouteParams> }
 ): Promise<ApiResponse<GetUserSubmissionsResponse>> {
   const { question_id } = await params;
 

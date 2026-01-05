@@ -35,3 +35,5 @@ storybook-static
 
 .npm-cache/
 tsconfig.tsbuildinfo
+
+/logs
